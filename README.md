@@ -1,15 +1,15 @@
 # 💈 TuTurno – Backend del Sistema de Gestión de Turnos para Peluquerías y Barberías
 
-Este repositorio contiene el **backend** de **TuTurno**, Sistema de reservas online donde dueños de locales gestionan horarios, servicios y empleados, mientras que los clientes pueden explorar comercios disponibles, filtrarlos por ubicación o rubro y reservar turnos según servicio, empleado y horario. Incluye autenticación, administración de turnos y visualización de historial.  
+Este repositorio contiene el **backend** de **TuTurno**, 
 El proyecto ofrece una API REST desarrollada con **Spring Boot**, conectada a una base de datos **PostgreSQL**, y con **autenticación mediante JWT**.
 
 ---
 
 ## 🧾 Descripción general
 
-**TuTurno** permite administrar clientes, empleados, servicios y reservas de manera simple y eficiente.  
+**TuTurno** Sistema de reservas online donde dueños de locales gestionan horarios, servicios y empleados, mientras que los clientes pueden explorar comercios disponibles, filtrarlos por ubicación o rubro y reservar turnos según servicio, empleado y horario. Incluye autenticación, administración de turnos y visualización de historial.  
 
-Está construido siguiendo buenas prácticas de desarrollo en **Java 21**, con arquitectura en capas (controladores, servicios, repositorios y entidades) y manejo de seguridad mediante **Spring Security**.
+Está construido siguiendo buenas prácticas de desarrollo , con arquitectura en capas (controladores, servicios, repositorios y entidades) y manejo de seguridad mediante **Spring Security**.
 
 ---
 
