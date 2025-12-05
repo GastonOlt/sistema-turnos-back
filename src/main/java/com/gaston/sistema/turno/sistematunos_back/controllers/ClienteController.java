@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 
-
+///CRUD de entidad cliente y info de turnos 
 @RestController
 @RequestMapping("/cliente")
 public class ClienteController {

@@ -120,8 +120,8 @@ public class EmpleadoServiceImp implements EmpleadoService {
          return empleadoRepository.findByLocalId(localDb.getId()).stream().map(emple -> empleadoDto(emple)).toList();
       }
         
-      @Override
-      public EmpleadoDto obtenerEmpleado(Long empleadoId,Long duenoId) {
+    @Override
+    public EmpleadoDto obtenerEmpleado(Long empleadoId,Long duenoId) {
         Empleado empleadoDb = empleadoRepository.findById(empleadoId).orElseThrow(()-> 
                             new IllegalArgumentException("no se encontro el empleado con ese id" + empleadoId ));
 
@@ -129,31 +129,31 @@ public class EmpleadoServiceImp implements EmpleadoService {
               throw new AccessDeniedException("No tienes permisos para ver este empleado");
         }
           return empleadoDto(empleadoDb);
-      }
-
-
-
-        public EmpleadoDto empleadoDto(Empleado empleado){
-             EmpleadoDto respDto = new EmpleadoDto();
-             respDto.setId(empleado.getId());
-             respDto.setApellido(empleado.getApellido());
-             respDto.setNombre(empleado.getNombre());
-             respDto.setEmail(empleado.getEmail());
-             respDto.setRol(empleado.getRol());
-             respDto.setEspecialidad(empleado.getEspecialidad());
-    
-             if(empleado.getImagenEmpleado() != null){
-                respDto.setDatosImagen(Base64.getEncoder().encodeToString(empleado.getImagenEmpleado().getDatosImagen()));
-                respDto.setTipoContenido(empleado.getImagenEmpleado().getTipoArchivo());
-             }
-             return respDto;
-       }
-
-
-        @Override
-        public Empleado obtenerEmpleadoEntity(Long empleadoId) {
-           return empleadoRepository.findById(empleadoId).orElseThrow(()-> new IllegalArgumentException("error al encontrar al empleado"));
-        }
-
-
     }
+
+    @Override
+    public Empleado obtenerEmpleadoEntity(Long empleadoId) {
+        Empleado empl = empleadoRepository.findById(empleadoId).orElseThrow(()-> 
+                                new IllegalArgumentException("error al encontrar al empleado"));
+        return empl;
+    }
+
+
+    public EmpleadoDto empleadoDto(Empleado empleado){
+            EmpleadoDto respDto = new EmpleadoDto();
+            respDto.setId(empleado.getId());
+            respDto.setApellido(empleado.getApellido());
+            respDto.setNombre(empleado.getNombre());
+            respDto.setEmail(empleado.getEmail());
+            respDto.setRol(empleado.getRol());
+            respDto.setEspecialidad(empleado.getEspecialidad());
+
+            if(empleado.getImagenEmpleado() != null){
+            respDto.setDatosImagen(Base64.getEncoder().encodeToString(empleado.getImagenEmpleado().getDatosImagen()));
+            respDto.setTipoContenido(empleado.getImagenEmpleado().getTipoArchivo());
+            }
+            return respDto;
+    }
+
+
+}

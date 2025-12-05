@@ -38,8 +38,7 @@ public class TurnoClienteController {
     }
 
     @GetMapping("/disponibles")
-    public ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@RequestParam Long localId,@RequestParam Long empleadoId,
-                                                            @RequestParam Long servicioId,
+    public ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@RequestParam Long localId,@RequestParam Long empleadoId, @RequestParam Long servicioId,
                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
 
         List<SlotDisponibleDTO> slots = turnoService.obtenerSlotsDisponibles(localId, empleadoId, servicioId, fecha);

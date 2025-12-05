@@ -17,6 +17,7 @@ public interface ClienteService {
     ClienteDTO obtenerClienteDTOPorId(Long id);
     ClienteDTO actualizarCliente(Long id, ClienteDTO clienteDTO);
     void eliminarCliente(Long id);
+    
     List<TurnoClienteDTO> obtenerTurnosActivos(Long clienteId);
     List<TurnoClienteDTO> obtenerHistorialTurnos(Long clienteId);
     void cancelarTurno(Long clienteId, Long turnoId);

@@ -74,5 +74,4 @@ public class EmpleadoController {
         EmpleadoDto empleados = empleadoService.obtenerEmpleado(empleadoId,duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(empleados);
     }
-   
 }

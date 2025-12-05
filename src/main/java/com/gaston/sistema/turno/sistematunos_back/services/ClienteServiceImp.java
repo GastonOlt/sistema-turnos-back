@@ -81,7 +81,11 @@ public class ClienteServiceImp implements ClienteService{
         clienteRepository.delete(cliente);
     }
 
+    ////////// TURNOS //////////
+    /// ///////////////////////
+    
     @Override
+    @Transactional(readOnly = true)
     public List<TurnoClienteDTO> obtenerTurnosActivos(Long clienteId) {
         Cliente cliente = obtenerPorId(clienteId);
         LocalDateTime ahora = LocalDateTime.now();
@@ -94,6 +98,7 @@ public class ClienteServiceImp implements ClienteService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TurnoClienteDTO> obtenerHistorialTurnos(Long clienteId) {
         Cliente cliente = obtenerPorId(clienteId);
         LocalDateTime ahora = LocalDateTime.now();
@@ -116,9 +121,9 @@ public class ClienteServiceImp implements ClienteService{
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado"));
         
-        if (turno.getFechaHoraInicio().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("No se puede cancelar un turno pasado");
-        }
+        // if (turno.getFechaHoraInicio().isBefore(LocalDateTime.now())) {
+        //     throw new IllegalArgumentException("No se puede cancelar un turno pasado");
+        // }
         
         turno.setEstado(EstadoTurno.CANCELADO);
     }

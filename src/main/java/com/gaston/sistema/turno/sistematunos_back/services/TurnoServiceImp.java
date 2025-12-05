@@ -47,8 +47,9 @@ public class TurnoServiceImp implements TurnoService {
     @Override
     @Transactional
     public TurnoResponseDTO reservarTurno(Long clienteId, TurnoRequestDTO turnoRequest) {
+
             if (turnoRepository.existsByClienteIdAndEstado(clienteId, EstadoTurno.CONFIRMADO)) {
-                throw new RuntimeException("Ya tienes un turno confirmado. No puedes reservar más de uno.");
+                throw new RuntimeException("Ya tienes un turno . No puedes reservar más de uno.");
             }
             Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(turnoRequest.getEmpleadoId());
             ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(turnoRequest.getServicioId());
@@ -90,6 +91,14 @@ public class TurnoServiceImp implements TurnoService {
 
     }
 
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<SlotDisponibleDTO> obtenerSlotsDisponibles(Long empleadoId, Long servicioId, LocalDate fecha) {
+         Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(empleadoId);
+         Long localId = empleadoDb.getLocal().getId();
+         return this.obtenerSlotsDisponibles( localId, empleadoId, servicioId, fecha);
+    }
     
     @Override
     @Transactional(readOnly = true)
@@ -156,6 +165,37 @@ public class TurnoServiceImp implements TurnoService {
         return slotDisponibles;
     }
     
+    //metodo para que el empleado pueda crear el registro de turno a un cliente sin reserva previa , para que quede registro
+    @Override
+    @Transactional
+    public TurnoResponseDTO crearTurnoEmpleado(Long empleadoId, TurnoRequestDTO turnoRequest){
+        Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(empleadoId);
+        Long localId = empleadoDb.getLocal().getId();
+        Local localDb = localService.obtenerLocalPorId(localId);
+        ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(turnoRequest.getServicioId());
+        Cliente clienteAnonimo = clienteService.findByEmail("anonimo@sistema.com")
+                                            .orElseThrow(() -> new RuntimeException("Cliente anónimo no configurado"));
+
+        LocalDateTime horarioFin = turnoRequest.getFechaHoraInicio().plusMinutes(servicioDb.getTiempo());
+        boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoId,turnoRequest.getFechaHoraInicio(),horarioFin);
+        if(ocupado){
+            throw new IllegalArgumentException("Horario no disponible para hacer una reserva");
+        }
+
+        Turno turno = new Turno();
+        turno.setCliente(clienteAnonimo);
+        turno.setEmpleado(empleadoDb);
+        turno.setLocal(localDb);
+        turno.setServicio(servicioDb);
+        turno.setFechaHoraInicio(turnoRequest.getFechaHoraInicio());
+        turno.setFechaHoraFin(horarioFin);
+        turno.setEstado(EstadoTurno.CONFIRMADO);
+
+        Turno nuevoTurno = turnoRepository.save(turno);
+        return convertirDto(nuevoTurno);
+    }
+
+
     public TurnoResponseDTO convertirDto(Turno turno){
         return new TurnoResponseDTO(
             turno.getId(),
@@ -168,4 +208,6 @@ public class TurnoServiceImp implements TurnoService {
             turno.isAdelantado()
             );
     }
+
+
 }
