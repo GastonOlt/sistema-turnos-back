@@ -14,7 +14,9 @@ import com.gaston.sistema.turno.sistematunos_back.dto.TurnoClienteDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Cliente;
 import com.gaston.sistema.turno.sistematunos_back.entities.Turno;
 import com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno;
+import com.gaston.sistema.turno.sistematunos_back.entities.Resenia;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ClienteRepository;
+import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
 
 
 @Service
@@ -22,6 +24,9 @@ public class ClienteServiceImp implements ClienteService{
 
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private ReseniaRepository reseniaRepository;
 
     @Override
     @Transactional
@@ -152,6 +157,12 @@ public class ClienteServiceImp implements ClienteService{
         if (turno.getServicio() != null) {
             dto.setServicio(turno.getServicio().getNombre());
             dto.setPrecio(turno.getServicio().getPrecio());
+        }
+
+        Optional<Resenia> resenia = reseniaRepository.findByTurnoId(turno.getId());
+        if (resenia.isPresent()) {
+            dto.setCalificacion(resenia.get().getCalificacion());
+            dto.setComentario(resenia.get().getComentario());
         }
         
         return dto;

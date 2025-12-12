@@ -1,5 +1,6 @@
 package com.gaston.sistema.turno.sistematunos_back.controllers;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -104,7 +105,14 @@ public class TurnoEmpleadoController {
         turnoEmpleadoService.confirmarTurno(empleadoId, turnoId);
         return ResponseEntity.ok().build();
     }
-    
-    
+
+    @GetMapping("/ganancias")
+    public ResponseEntity<BigDecimal> ganananciasEmpleado(@AuthenticationPrincipal UserPrincipal user, 
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        Long empleadoId = user.getId();
+        BigDecimal ganancias = turnoEmpleadoService.calcularGanancias(empleadoId, desde, hasta);
+        return ResponseEntity.ok(ganancias);
+    }    
     
 }

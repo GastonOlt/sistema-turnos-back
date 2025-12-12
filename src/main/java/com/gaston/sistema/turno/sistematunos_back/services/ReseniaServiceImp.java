@@ -1,0 +1,96 @@
+package com.gaston.sistema.turno.sistematunos_back.services;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gaston.sistema.turno.sistematunos_back.dto.ReseniaRequestDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.ReseniaResponseDTO;
+import com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno;
+import com.gaston.sistema.turno.sistematunos_back.entities.Resenia;
+import com.gaston.sistema.turno.sistematunos_back.entities.Turno;
+import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
+import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
+
+@Service
+public class ReseniaServiceImp implements ReseniaService {
+
+    @Autowired
+    private ReseniaRepository reseniaRepository;
+
+    @Autowired
+    private TurnoRepository turnoRepository;
+
+    @Override
+    @Transactional
+    public ReseniaResponseDTO publicarResenia(Long clienteId, ReseniaRequestDTO request) {
+        Turno turnoActual = turnoRepository.findById(request.getTurnoId())
+                .orElseThrow(() -> new IllegalArgumentException("El turno no existe"));
+
+        if (!turnoActual.getCliente().getId().equals(clienteId)) {
+            throw new IllegalArgumentException("Este turno no corresponde al cliente autenticado");
+        }
+
+        if (turnoActual.getEstado() != EstadoTurno.FINALIZADO) {
+            throw new IllegalArgumentException("Solo se pueden reseñar turnos FINALIZADOS");
+        }
+
+        Long localId = turnoActual.getLocal().getId();
+
+        Optional<Resenia> reseniaExistente = reseniaRepository.findByLocalIdAndClienteId(localId, clienteId);
+
+        Resenia resenia;
+        if (reseniaExistente.isPresent()) {
+            resenia = reseniaExistente.get();
+            resenia.setCalificacion(request.getCalificacion());
+            resenia.setComentario(request.getComentario());
+            
+            resenia.setTurno(turnoActual); 
+        } else {
+            resenia = new Resenia();
+            resenia.setCalificacion(request.getCalificacion());
+            resenia.setComentario(request.getComentario());
+            resenia.setLocal(turnoActual.getLocal());
+            resenia.setCliente(turnoActual.getCliente());
+            resenia.setTurno(turnoActual);
+        }
+
+        Resenia reseniaGuardada = reseniaRepository.save(resenia);
+        return convertirADTO(reseniaGuardada);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReseniaResponseDTO> obtenerReseniasPorLocal(Long localId) {
+        return reseniaRepository.findByLocalIdOrderByFechaUltimaModificacionDesc(localId).stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Double obtenerPromedioLocal(Long localId) {
+        Double promedio = reseniaRepository.obtenerPromedioCalificacion(localId);
+        return promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0;
+    }
+
+
+    private ReseniaResponseDTO convertirADTO(Resenia r) {
+        String nombreCliente = (r.getCliente() != null) 
+            ? r.getCliente().getNombre() + " " + r.getCliente().getApellido()
+            : "Anónimo";
+        
+        return new ReseniaResponseDTO(
+            r.getId(),
+            r.getCalificacion(),
+            r.getComentario(),
+            nombreCliente,
+            r.getFechaUltimaModificacion(),
+            r.getTurno().getServicio().getNombre()
+        );
+    }
+}

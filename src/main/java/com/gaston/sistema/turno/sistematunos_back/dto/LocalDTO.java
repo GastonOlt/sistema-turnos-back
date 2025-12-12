@@ -21,6 +21,7 @@ public class LocalDTO {
     private Double latitud;
     private Double longitud;
     private String  nombreDueno;
+    private Double promedioCalificacion;
     private List<ImagenLocal> imagenes = new ArrayList<>();
     private List<ServicioLocal> servicios = new ArrayList<>();
     private List<Horario> horarios = new ArrayList<>();
@@ -160,6 +161,16 @@ public class LocalDTO {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+
+    public Double getPromedioCalificacion() {
+        return promedioCalificacion;
+    }
+
+
+    public void setPromedioCalificacion(Double promedioCalificacion) {
+        this.promedioCalificacion = promedioCalificacion;
     }
 
     

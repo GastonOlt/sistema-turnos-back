@@ -5,12 +5,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,50 +46,55 @@ public class TurnoServiceImp implements TurnoService {
     @Autowired
     private ClienteService clienteService;
 
+    @Autowired
+    private EmailService emailService;
+
     @Override
     @Transactional
     public TurnoResponseDTO reservarTurno(Long clienteId, TurnoRequestDTO turnoRequest) {
+        
+        List<EstadoTurno> estados = Arrays.asList(EstadoTurno.CONFIRMADO,EstadoTurno.PENDIENTE);
 
-            if (turnoRepository.existsByClienteIdAndEstado(clienteId, EstadoTurno.CONFIRMADO)) {
-                throw new RuntimeException("Ya tienes un turno . No puedes reservar más de uno.");
-            }
-            Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(turnoRequest.getEmpleadoId());
-            ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(turnoRequest.getServicioId());
-            Local localDb = localService.obtenerLocalPorId(turnoRequest.getLocalId());
-            Cliente clienteDb = clienteService.obtenerPorId(clienteId);
+        if (turnoRepository.existsByClienteIdAndEstadoIn(clienteId, estados)) {
+            throw new RuntimeException("Ya tienes un turno . No puedes reservar más de uno.");
+        }
+        Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(turnoRequest.getEmpleadoId());
+        ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(turnoRequest.getServicioId());
+        Local localDb = localService.obtenerLocalPorId(turnoRequest.getLocalId());
+        Cliente clienteDb = clienteService.obtenerPorId(clienteId);
 
-            if(!empleadoDb.getLocal().getId().equals(localDb.getId())){
-                throw new RuntimeException("El empleado no pertenece a este local");
-            }
+        if(!empleadoDb.getLocal().getId().equals(localDb.getId())){
+            throw new RuntimeException("El empleado no pertenece a este local");
+        }
 
-            if (!servicioDb.getLocal().getId().equals(localDb.getId())) {
-               throw new RuntimeException("El servicio no pertenece a este local");
-            }
- 
-            LocalDateTime fechaHoraFin = turnoRequest.getFechaHoraInicio().plusMinutes(servicioDb.getTiempo());
-            boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoDb.getId(), turnoRequest.getFechaHoraInicio(), fechaHoraFin);
+        if (!servicioDb.getLocal().getId().equals(localDb.getId())) {
+            throw new RuntimeException("El servicio no pertenece a este local");
+        }
 
-            if(ocupado){
-                 throw new RuntimeException("El empleado no está disponible en ese horario");
-            }
-            if(turnoRequest.getFechaHoraInicio().isBefore(LocalDateTime.now())){
-                    throw new RuntimeException("no se puede reservar turnos en el pasado");
-            }
+        LocalDateTime fechaHoraFin = turnoRequest.getFechaHoraInicio().plusMinutes(servicioDb.getTiempo());
+        boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoDb.getId(), turnoRequest.getFechaHoraInicio(), fechaHoraFin);
 
-            Turno turno = new Turno();
+        if(ocupado){
+                throw new RuntimeException("El empleado no está disponible en ese horario");
+        }
+        if(turnoRequest.getFechaHoraInicio().isBefore(LocalDateTime.now())){
+                throw new RuntimeException("no se puede reservar turnos en el pasado");
+        }
 
-            turno.setCliente(clienteDb);
-            turno.setEmpleado(empleadoDb);
-            turno.setServicio(servicioDb);
-            turno.setLocal(localDb);
-            turno.setFechaHoraInicio(turnoRequest.getFechaHoraInicio());
-            turno.setFechaHoraFin(fechaHoraFin);
-            turno.setEstado(EstadoTurno.PENDIENTE);
-            turno.setAdelantado(false);
+        Turno turno = new Turno();
 
-            Turno turnoNuevo = turnoRepository.save(turno);
+        turno.setCliente(clienteDb);
+        turno.setEmpleado(empleadoDb);
+        turno.setServicio(servicioDb);
+        turno.setLocal(localDb);
+        turno.setFechaHoraInicio(turnoRequest.getFechaHoraInicio());
+        turno.setFechaHoraFin(fechaHoraFin);
+        turno.setEstado(EstadoTurno.PENDIENTE);
+        turno.setAdelantado(false);
 
-            return convertirDto(turnoNuevo);
+        Turno turnoNuevo = turnoRepository.save(turno);
+
+        return convertirDto(turnoNuevo);
 
     }
 
@@ -127,14 +134,6 @@ public class TurnoServiceImp implements TurnoService {
         if(rangos.isEmpty()){
             return new ArrayList<>();
         }
-            for(Horario rango : rangos){
-                System.out.println("/////////////// RANGOSSSSSSS //////////////");
-                System.out.println(rango.getDiaSemana());
-                System.out.println(rango.getHorarioApertura());
-                System.out.println(rango.getEmpleado());
-                System.out.println(rango.getHorarioCierre());
-
-            }
 
         int duracionMin = servicioDb.getTiempo();
         int intervaloMin =15;
@@ -163,6 +162,49 @@ public class TurnoServiceImp implements TurnoService {
             }
         }
         return slotDisponibles;
+    }
+
+    //para actualizar los turnos que estan confirmados antes de esta fecha
+    @Scheduled(fixedRate = 600000)
+    @Transactional
+    public void actualizarTurnosFinalizados(){
+        LocalDateTime ahora = LocalDateTime.now();
+
+        List<Turno> turnosVencidos = turnoRepository.findAllByEstadoAndFechaHoraFinBefore(EstadoTurno.CONFIRMADO,ahora);
+
+        if(!turnosVencidos.isEmpty()){
+            for(Turno turno : turnosVencidos){
+                turno.setEstado(EstadoTurno.FINALIZADO);
+            }
+            turnoRepository.saveAll(turnosVencidos);
+        }
+    }
+
+    //para enviar email a los turnos que estan confirmados , de el dia actual 
+    @Scheduled(cron = "0 0 8 * * *") 
+    @Transactional(readOnly = true)
+    public void enviarRecordatorioTurno(){
+        LocalDateTime inicioDia = LocalDate.now().atStartOfDay();
+        LocalDateTime finDia = LocalDate.now().atTime(23,59);
+
+        List<Turno> turnosDelDia = turnoRepository.findByEstadoAndFechaHoraInicioBetween(EstadoTurno.CONFIRMADO,inicioDia,finDia);
+
+        if(!turnosDelDia.isEmpty()){
+            for (Turno turno : turnosDelDia) {
+                try {
+                    if (turno.getCliente() != null) {
+                           emailService.enviarRecordatorioTurno(turno.getCliente().getEmail(),
+                                        turno.getCliente().getNombre(),
+                                        turno.getFechaHoraInicio(),
+                                        turno.getServicio().getNombre(),
+                                        turno.getLocal().getNombre(),
+                                        turno.getLocal().getDireccion());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error enviando recordatorio al turno " + turno.getId());
+                }
+            }
+        }
     }
     
     //metodo para que el empleado pueda crear el registro de turno a un cliente sin reserva previa , para que quede registro

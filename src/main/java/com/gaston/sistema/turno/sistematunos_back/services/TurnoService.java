@@ -13,4 +13,6 @@ public interface TurnoService {
     List<SlotDisponibleDTO> obtenerSlotsDisponibles(Long empleadoId, Long servicioId, LocalDate fecha);
     TurnoResponseDTO reservarTurno(Long clienteId , TurnoRequestDTO turnoRequest);
     TurnoResponseDTO crearTurnoEmpleado(Long empleadoId,TurnoRequestDTO turnoRequestDTO);
+    void actualizarTurnosFinalizados();
+    void enviarRecordatorioTurno();
 }

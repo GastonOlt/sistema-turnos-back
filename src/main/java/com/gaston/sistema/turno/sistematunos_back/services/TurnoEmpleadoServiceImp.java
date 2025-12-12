@@ -2,6 +2,7 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +26,8 @@ public class TurnoEmpleadoServiceImp implements TurnoEmpleadoService{
     @Autowired
     private TurnoRepository turnoRepository;
 
-
+    @Autowired 
+    private EmailService emailService;
     
     @Override
     @Transactional(readOnly = true)
@@ -75,6 +77,20 @@ public class TurnoEmpleadoServiceImp implements TurnoEmpleadoService{
 
         turno.setEstado(EstadoTurno.CONFIRMADO);
         turnoRepository.save(turno);
+       try {
+            if (turno.getCliente() != null) {
+                emailService.enviarConfirmacionTurno(
+                    turno.getCliente().getEmail(),
+                    turno.getCliente().getNombre(),
+                    turno.getFechaHoraInicio(),
+                    turno.getServicio().getNombre(),
+                    turno.getLocal().getNombre(),
+                    turno.getLocal().getDireccion()
+                );
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo enviar el correo: " + e.getMessage());
+        }
     }
 
     @Override
@@ -87,8 +103,19 @@ public class TurnoEmpleadoServiceImp implements TurnoEmpleadoService{
     @Override
     @Transactional(readOnly = true)
     public BigDecimal calcularGanancias(Long empleadoId, LocalDate desde, LocalDate hasta) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'calcularGanancias'");
+        LocalDateTime fechaInicio = desde.atStartOfDay();
+        LocalDateTime fechaFin = hasta.atTime(23, 59);
+
+        List<Turno> turnos = turnoRepository.findByEmpleadoIdAndEstadoAndFechaHoraInicioBetween(empleadoId,EstadoTurno.FINALIZADO,fechaInicio,fechaFin);
+
+        int sumaTotal = 0;
+
+        for(Turno turno : turnos){
+            sumaTotal += turno.getServicio().getPrecio();
+        }
+
+        return BigDecimal.valueOf(sumaTotal);
+
     }
 
     public TurnoEmpleadoDTO convertirATurnoEmpleadoDTO(Turno turno){

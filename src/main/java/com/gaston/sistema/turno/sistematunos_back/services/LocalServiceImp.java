@@ -15,6 +15,7 @@ import com.gaston.sistema.turno.sistematunos_back.dto.LocalDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Dueno;
 import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.repositories.LocalRepository;
+import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
 
 @Service
 public class LocalServiceImp implements LocalService{
@@ -24,6 +25,9 @@ public class LocalServiceImp implements LocalService{
 
     @Autowired
     private DuenoServiceImp duenoService;
+
+    @Autowired
+    private ReseniaRepository reseniaRepository;
 
     @Override
     @Transactional
@@ -74,8 +78,13 @@ public class LocalServiceImp implements LocalService{
     @Override
     public Page<LocalDTO> obtenerLocalesDisponibles(Pageable pageable) {
         try {
-            Page<LocalDTO> paginaLocales = localRepository.findAll(pageable).map(local -> new LocalDTO(local));
-            return paginaLocales;
+           return localRepository.findAll(pageable).map(local -> {
+                LocalDTO dto = new LocalDTO(local);
+
+                Double promedio = reseniaRepository.obtenerPromedioCalificacion(local.getId());
+                dto.setPromedioCalificacion(promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0);
+                return dto;
+            });
         } catch (Exception e) {
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -105,8 +114,13 @@ public class LocalServiceImp implements LocalService{
         
         Page<Local> paginaLocales = localRepository.findAll(spec, pageable);
         
-        return paginaLocales.map(LocalDTO::new);
-                
+        return paginaLocales.map(local -> {
+                LocalDTO dto = new LocalDTO(local);
+                Double promedio = reseniaRepository.obtenerPromedioCalificacion(local.getId());
+                dto.setPromedioCalificacion(promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0);
+                return dto;
+        });
+
     } catch (Exception e) {
         throw new RuntimeException("Error al obtener locales paginados: " + e.getMessage());
     }
