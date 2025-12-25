@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,16 +26,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 
-
+//manjejo de empleados por parte del dueno del local
 @RestController
-@RequestMapping("/empleado")
+@RequestMapping("/dueno/empleados")
 public class EmpleadoController {
 
-    @Autowired
-    private EmpleadoService empleadoService;
+    private final EmpleadoService empleadoService;
 
-    @PostMapping("/crear")
-    public ResponseEntity<?> crearEmpleado(@Valid @RequestPart("empleado") Empleado empleado, 
+    public EmpleadoController(EmpleadoService empleadoService) {
+        this.empleadoService = empleadoService;
+    }
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<EmpleadoDto> crearEmpleado(@Valid @RequestPart("empleado") Empleado empleado, 
                         @AuthenticationPrincipal UserPrincipal user ,
                         @RequestPart("imagen")  MultipartFile archivo) {
         Long duenoId = user.getId();
@@ -44,14 +46,14 @@ public class EmpleadoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(empleadoNuevo);
     }
     
-    @DeleteMapping("/eliminar/{empleadoId}")
-    public ResponseEntity<?> eliminarEmpleado(@PathVariable Long empleadoId, @AuthenticationPrincipal UserPrincipal user){
+    @DeleteMapping("/{empleadoId}")
+    public ResponseEntity<Void> eliminarEmpleado(@PathVariable Long empleadoId, @AuthenticationPrincipal UserPrincipal user){
         Long duenoId = user.getId();
         empleadoService.eliminarEmpleado(empleadoId,duenoId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
     
-    @PutMapping("/editar/{empleadoId}")
+    @PutMapping(value = "/{empleadoId}", consumes = {"multipart/form-data"})
     public ResponseEntity<?> editarEmppleado(@RequestPart("empleado") Empleado empleado,
                         @RequestPart("imagen") MultipartFile archivo,
                         @PathVariable Long empleadoId,
@@ -61,15 +63,15 @@ public class EmpleadoController {
         return ResponseEntity.status(HttpStatus.OK).body(empleadoEditado);
     }
     
-    @GetMapping("/todos")
-    public ResponseEntity<?> obtenerEmpleados(@AuthenticationPrincipal UserPrincipal user) {
+    @GetMapping
+    public ResponseEntity<List<EmpleadoDto>> obtenerEmpleados(@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
         List<EmpleadoDto> empleados = empleadoService.obtenerEmpleados(duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(empleados);
     }
 
     @GetMapping("/{empleadoId}")
-    public ResponseEntity<?> obtenerEmpleado(@PathVariable Long empleadoId, @AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<EmpleadoDto> obtenerEmpleado(@PathVariable Long empleadoId, @AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
         EmpleadoDto empleados = empleadoService.obtenerEmpleado(empleadoId,duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(empleados);

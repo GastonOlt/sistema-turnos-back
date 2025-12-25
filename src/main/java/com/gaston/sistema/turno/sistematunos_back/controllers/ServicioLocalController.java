@@ -3,7 +3,6 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,46 +26,49 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RestController
-@RequestMapping("/dueno/servicio")
+@RequestMapping("/dueno/servicios")
 public class ServicioLocalController {
 
-    @Autowired
-    private ServicioLocalService servicioLocalService;
+    private final ServicioLocalService servicioLocalService;
 
-    @PostMapping("/crear")
-    public ResponseEntity<?> crearServicio(@Valid @RequestBody ServicioLocal servicio,@AuthenticationPrincipal UserPrincipal user) {
-        Long duenoId = user.getId();
-        ServicioLocal nuevoServicio = servicioLocalService.crearServicio(servicio, duenoId);        
-        return ResponseEntity.status(HttpStatus.OK).body(nuevoServicio);
+    public ServicioLocalController(ServicioLocalService servicioLocalService) {
+        this.servicioLocalService = servicioLocalService;
     }
 
-    @PutMapping("/editar/{servicioId}")
-    public ResponseEntity<?> editarServicio(@PathVariable Long servicioId, @RequestBody ServicioLocal servicioLocal,
+    @PostMapping
+    public ResponseEntity<ServicioLocal> crearServicio(@Valid @RequestBody ServicioLocal servicio,@AuthenticationPrincipal UserPrincipal user) {
+        Long duenoId = user.getId();
+        ServicioLocal nuevoServicio = servicioLocalService.crearServicio(servicio, duenoId);        
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoServicio);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ServicioLocal> editarServicio(@PathVariable Long id, @RequestBody ServicioLocal servicioLocal,
                                             @AuthenticationPrincipal UserPrincipal user)  {
         Long duenoId = user.getId();
-        ServicioLocal servicioEditado = servicioLocalService.editarServicio(servicioLocal, servicioId, duenoId);
+        ServicioLocal servicioEditado = servicioLocalService.editarServicio(servicioLocal, id, duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(servicioEditado);
     }
 
-    @GetMapping("/{servicioId}")
-    public ResponseEntity<?> obtenerServicio(@PathVariable Long servicioId,@AuthenticationPrincipal UserPrincipal user) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> obtenerServicio(@PathVariable Long id,@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
-        ServicioLocal servicioDb = servicioLocalService.obtenerServicio(servicioId,duenoId);
+        ServicioLocal servicioDb = servicioLocalService.obtenerServicio(id,duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(servicioDb);
     }
     
-    @GetMapping("/todos")
-    public ResponseEntity<?> obtenerServicios(@AuthenticationPrincipal UserPrincipal user) {
+    @GetMapping
+    public ResponseEntity<List<ServicioLocal>> obtenerServicios(@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
         List<ServicioLocal> servicioDb = servicioLocalService.obtenerServicios(duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(servicioDb);
     }
     
-    @DeleteMapping("/eliminar/{servicioId}")
-    public ResponseEntity<?> eliminarServicio(@PathVariable Long servicioId,@AuthenticationPrincipal UserPrincipal user){
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarServicio(@PathVariable Long id,@AuthenticationPrincipal UserPrincipal user){
         Long duenoId = user.getId();
-        servicioLocalService.eliminarServicio(servicioId, duenoId);
-        return ResponseEntity.status(HttpStatus.OK).body("eliminado correctamente");
+        servicioLocalService.eliminarServicio(id, duenoId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
     
 }

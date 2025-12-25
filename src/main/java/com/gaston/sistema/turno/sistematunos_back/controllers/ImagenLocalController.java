@@ -2,7 +2,6 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,42 +23,45 @@ import org.springframework.web.bind.annotation.PatchMapping;
 
 
 @RestController
-@RequestMapping("/dueno")
+@RequestMapping("/dueno/local/imagenes")
 public class ImagenLocalController {
 
-        @Autowired
-        private ImagenLocalService imagenLocalService;
+        private final ImagenLocalService imagenLocalService;
 
-        @PostMapping("/locales/imagenes")
-        public ResponseEntity<?> guardarImagenes(@AuthenticationPrincipal UserPrincipal user, @RequestParam("imagenes") MultipartFile[] archivos) {
+        public ImagenLocalController(ImagenLocalService imagenLocalService) {
+                this.imagenLocalService = imagenLocalService;
+        }
+
+        @PostMapping(consumes = {"multipart/form-data"})
+        public ResponseEntity<List<ImagenLocal>> guardarImagenes(@AuthenticationPrincipal UserPrincipal user, @RequestParam("imagenes") MultipartFile[] archivos) {
                 Long duenoId = user.getId();
                 List<ImagenLocal> imagenes = imagenLocalService.gurdarImagenes(duenoId, archivos);
                 return ResponseEntity.status(HttpStatus.CREATED).body(imagenes);
         }
 
-        @GetMapping("/locales/imagenes")
+        @GetMapping
         public ResponseEntity<List<ImagenLocal>> listarImagenes(@AuthenticationPrincipal UserPrincipal user ) {
             Long duenoId = user.getId();
             List<ImagenLocal> imagenes = imagenLocalService.obtenerImagenPorLocal(duenoId); 
-            return ResponseEntity.ok(imagenes);
+           return ResponseEntity.status(HttpStatus.OK).body(imagenes);
         }
 
-        @PatchMapping("/locales/imagenes")
+        @PatchMapping(consumes = {"multipart/form-data"})
         public ResponseEntity<List<ImagenLocal>> editarImagenesParcial(@AuthenticationPrincipal UserPrincipal user,
             @RequestParam(value = "eliminar", required = false) List<Long> idsAEliminar,
             @RequestParam(value = "nuevas", required = false) MultipartFile[] archivosNuevos) {
         
            Long duenoId = user.getId();
            List<ImagenLocal> imagenes = imagenLocalService.editarImagen(duenoId, idsAEliminar, archivosNuevos);
-           return ResponseEntity.ok(imagenes);
+           return ResponseEntity.status(HttpStatus.OK).body(imagenes);
         }
 
         
-        @GetMapping("/{imagenId}/imagen")
+        @GetMapping("/{imagenId}/archivo")
         public ResponseEntity<byte[]> obtenerImagen(@PathVariable Long imagenId) {
         ImagenLocal imagen = imagenLocalService.findById(imagenId);
                 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.valueOf(imagen.getTipoArchivo()))
                 .body(imagen.getDatosImagen());
         }

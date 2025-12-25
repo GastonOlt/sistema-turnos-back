@@ -9,7 +9,6 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.services.LocalService;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -21,31 +20,30 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-@RequestMapping("/publico/local")
+@RequestMapping("/publico/locales")
 public class PublicoLocalController {
 
-    @Autowired
-    private LocalService localService;
+    private final LocalService localService;
 
-    @GetMapping("/obtener/todos")
-    public ResponseEntity<?> obtenerLocalesDisponibles(@PageableDefault(page = 0, size = 10)Pageable pageable) {
-        Page<LocalDTO> localesDisponibles = localService.obtenerLocalesDisponibles(pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(localesDisponibles);
+    public PublicoLocalController(LocalService localService) {
+        this.localService = localService;
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<?> obtenerLocalPorId(@PathVariable Long id) {
+    public ResponseEntity<Local> obtenerLocalPorId(@PathVariable Long id) {
             Local localDb = localService.obtenerLocalPorId(id);
-            return ResponseEntity.ok(localDb);
+            return ResponseEntity.status(HttpStatus.OK).body(localDb);
     }
     
-    @GetMapping("/obtener")
-    public ResponseEntity<?> obtenerLocalesDisponiblesPorTipoOProvinciaONombre(@RequestParam(required = false) String tipoLocal ,
+    @GetMapping
+    public ResponseEntity<Page<LocalDTO>> obtenerLocalesDisponiblesPorTipoOProvinciaONombre(
+                                                      @RequestParam(required = false) String tipoLocal ,
                                                       @RequestParam(required = false) String provincia,
                                                       @RequestParam(required = false) String nombre,
                                                       @PageableDefault(page = 0, size = 10)Pageable pageable) {
-        Page<LocalDTO> localesDisponibles = localService.obtnerLocalPorTipoOProvicinciaONombre(tipoLocal,provincia,nombre,pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(localesDisponibles);
+
+       Page<LocalDTO> locales = localService.obtenerLocales(tipoLocal, provincia, nombre, pageable);
+       return ResponseEntity.status(HttpStatus.OK).body(locales);
     }
     
 }

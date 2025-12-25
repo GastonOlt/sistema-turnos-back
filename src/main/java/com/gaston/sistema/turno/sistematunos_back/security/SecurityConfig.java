@@ -3,7 +3,6 @@ package com.gaston.sistema.turno.sistematunos_back.security;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,11 +26,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -51,16 +53,13 @@ public class SecurityConfig {
             .exceptionHandling(excep -> excep.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/registro/**","/auth/login/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/publico/**").permitAll()
+
                 .requestMatchers("/dueno/**").hasRole("DUENO")
                 .requestMatchers("/empleado/**").hasAnyRole("DUENO","EMPLEADO")
-                .requestMatchers("/horario/**").hasAnyRole("DUENO","EMPLEADO")
                 .requestMatchers("/cliente/**").authenticated()
-                .requestMatchers("/publico/**").permitAll()
-                // .requestMatchers(HttpMethod.POST,"/empleado/crear").hasRole("DUENO")
-                // .requestMatchers(HttpMethod.GET,"/empleado/todos").hasRole("DUENO")
-                // .requestMatchers(HttpMethod.DELETE,"/empleado/eliminar/**").hasRole("DUENO")
-                // .requestMatchers("/empleado/**").hasRole("EMPLEADO")
+             
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

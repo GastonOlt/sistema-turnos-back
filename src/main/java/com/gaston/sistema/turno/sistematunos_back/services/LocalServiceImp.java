@@ -1,9 +1,6 @@
 package com.gaston.sistema.turno.sistematunos_back.services;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Page;
@@ -31,8 +28,7 @@ public class LocalServiceImp implements LocalService{
 
     @Override
     @Transactional
-    public  Map<String,Object> crearLocal(Local local,Long duenoId) {
-        try{
+    public  LocalDTO crearLocal(Local local,Long duenoId) {
             Dueno dueno = duenoService.findById(duenoId).orElseThrow( ()-> 
                                         new IllegalArgumentException("Dueno no encontrado"));
 
@@ -41,17 +37,7 @@ public class LocalServiceImp implements LocalService{
 
             Local nuevoLocal = localRepository.save(local);
 
-            LocalDTO localDto = new LocalDTO(nuevoLocal);
-            
-            Map<String,Object> resp = new HashMap<>();
-            resp.put("message ", "local creado correctamente");
-            resp.put("local ", localDto );
-
-            return resp;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error al crear el local: " + e.getMessage());
-        }
+            return new LocalDTO(nuevoLocal);
     }
 
     @Override
@@ -62,6 +48,7 @@ public class LocalServiceImp implements LocalService{
         return localRepository.save(localDb);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Local obtenerLocalPorId(Long id) {
         return localRepository.findById(id)
@@ -75,26 +62,16 @@ public class LocalServiceImp implements LocalService{
                                 new IllegalArgumentException("local no econtrado con este Id de dueño: "+duenoId));
     }
 
-    @Override
-    public Page<LocalDTO> obtenerLocalesDisponibles(Pageable pageable) {
-        try {
-           return localRepository.findAll(pageable).map(local -> {
-                LocalDTO dto = new LocalDTO(local);
-
-                Double promedio = reseniaRepository.obtenerPromedioCalificacion(local.getId());
-                dto.setPromedioCalificacion(promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0);
-                return dto;
-            });
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
-    }
 
     @Override
-    public Page<LocalDTO> obtnerLocalPorTipoOProvicinciaONombre(
+    public Page<LocalDTO> obtenerLocales(
         String tipoLocal, String provincia, String nombre, Pageable pageable) {
 
-    try {
+        if (tipoLocal == null && provincia == null && nombre == null) {
+        return localRepository.findAll(pageable)
+                .map(this::convertirADTO); 
+        }
+
         Specification<Local> spec = Specification.allOf();
         
         if (tipoLocal != null) {
@@ -112,18 +89,14 @@ public class LocalServiceImp implements LocalService{
                 cb.like(cb.lower(root.get("nombre")), "%" + nombre.toLowerCase() + "%"));
         }
         
-        Page<Local> paginaLocales = localRepository.findAll(spec, pageable);
-        
-        return paginaLocales.map(local -> {
-                LocalDTO dto = new LocalDTO(local);
-                Double promedio = reseniaRepository.obtenerPromedioCalificacion(local.getId());
-                dto.setPromedioCalificacion(promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0);
-                return dto;
-        });
-
-    } catch (Exception e) {
-        throw new RuntimeException("Error al obtener locales paginados: " + e.getMessage());
-    }
+       return localRepository.findAll(spec, pageable)
+                .map(this::convertirADTO);
     }
 
+    private LocalDTO convertirADTO(Local local) {
+        LocalDTO dto = new LocalDTO(local);
+        Double promedio = reseniaRepository.obtenerPromedioCalificacion(local.getId());
+        dto.setPromedioCalificacion(promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0);
+        return dto;
+    }
 }

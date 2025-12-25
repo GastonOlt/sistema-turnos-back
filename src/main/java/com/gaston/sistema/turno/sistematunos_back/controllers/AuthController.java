@@ -2,7 +2,6 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,30 +20,32 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/autenticacion")
 public class AuthController {
 
-  
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
-    @PostMapping("/registro/cliente")
-    public ResponseEntity<?> crearCliente(@Valid @RequestBody Cliente cliente) {
-         UsuarioDTO clienteRegistrado = authService.registrarCliente(cliente);
-         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("cliente registrado ",clienteRegistrado));
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
-    @PostMapping("/registro/dueno")
-    public ResponseEntity<?> crearDueno(@Valid @RequestBody Dueno dueno) {
+    @PostMapping("/cliente")
+    public ResponseEntity<UsuarioDTO> crearCliente(@Valid @RequestBody Cliente cliente) {
+         UsuarioDTO clienteRegistrado = authService.registrarCliente(cliente);
+         return ResponseEntity.status(HttpStatus.CREATED).body(clienteRegistrado);
+    }
+
+    @PostMapping("/dueno")
+    public ResponseEntity<UsuarioDTO> crearDueno(@Valid @RequestBody Dueno dueno) {
       UsuarioDTO duenoRegistrado = authService.registrarDueno(dueno);
-       return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("dueño registrado ",duenoRegistrado));
+       return ResponseEntity.status(HttpStatus.CREATED).body(duenoRegistrado);
     }
     
     
     @PostMapping("/login")
-    public ResponseEntity<?> loginCliente(@RequestBody LoginRequest req){
+    public ResponseEntity<Map<String, Object>> loginCliente(@RequestBody LoginRequest req){
         Map<String,Object> resp = authService.Login(req);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.status(HttpStatus.OK).body(resp);
     }
 
 
