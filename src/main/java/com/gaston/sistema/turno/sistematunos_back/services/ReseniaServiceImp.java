@@ -10,8 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.gaston.sistema.turno.sistematunos_back.dto.ReseniaRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.ReseniaResponseDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno;
+import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.entities.Resenia;
 import com.gaston.sistema.turno.sistematunos_back.entities.Turno;
+import com.gaston.sistema.turno.sistematunos_back.repositories.LocalRepository;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
 import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 
@@ -20,10 +22,12 @@ public class ReseniaServiceImp implements ReseniaService {
 
     private final ReseniaRepository reseniaRepository;
     private final TurnoRepository turnoRepository;
+    private final LocalRepository localRepository;
 
-    public ReseniaServiceImp(ReseniaRepository reseniaRepository, TurnoRepository turnoRepository) {
+    public ReseniaServiceImp(ReseniaRepository reseniaRepository, TurnoRepository turnoRepository, LocalRepository localRepository) {
         this.reseniaRepository = reseniaRepository;
         this.turnoRepository = turnoRepository;
+        this.localRepository = localRepository;
     }
 
     @Override
@@ -61,6 +65,8 @@ public class ReseniaServiceImp implements ReseniaService {
         }
 
         Resenia reseniaGuardada = reseniaRepository.save(resenia);
+        actualizarPromedioLocal(reseniaGuardada.getLocal().getId());
+
         return convertirADTO(reseniaGuardada);
     }
 
@@ -79,6 +85,17 @@ public class ReseniaServiceImp implements ReseniaService {
         return promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0;
     }
 
+    private void actualizarPromedioLocal(Long localId) {
+        Double nuevoPromedio = reseniaRepository.obtenerPromedioCalificacion(localId);
+        if (nuevoPromedio == null) nuevoPromedio = 0.0;
+        
+        nuevoPromedio = Math.round(nuevoPromedio * 10.0) / 10.0;
+
+        Local local = localRepository.findById(localId).orElseThrow();
+        local.setPromedioCalificacion(nuevoPromedio);
+        localRepository.save(local);
+    }
+    
 
     private ReseniaResponseDTO convertirADTO(Resenia r) {
         String nombreCliente = (r.getCliente() != null) 

@@ -17,6 +17,7 @@ import com.gaston.sistema.turno.sistematunos_back.dto.SlotDisponibleDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Empleado;
 import com.gaston.sistema.turno.sistematunos_back.entities.Horario;
 import com.gaston.sistema.turno.sistematunos_back.entities.ServicioLocal;
+import com.gaston.sistema.turno.sistematunos_back.entities.Turno;
 import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 
 @Service
@@ -43,6 +44,10 @@ public class CalculadoraDisponibilidadService {
             return new ArrayList<>();
         }
 
+        LocalDateTime inicioDia = fecha.atStartOfDay();
+        LocalDateTime finDia = fecha.atTime(23, 59, 59);
+        List<Turno> turnosDelDia = turnoRepository.findTurnosActivosPorFecha(empleado.getId(), inicioDia, finDia);
+
         int duracionMin = servicio.getTiempo();
         int intervaloMin = 15; 
 
@@ -60,7 +65,8 @@ public class CalculadoraDisponibilidadService {
                     apertura = apertura.plusMinutes(intervaloMin);
                     continue;
                 }
-                boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleado.getId(), slotInicial, slotFin);
+
+                boolean ocupado = verificarSolapamiento(turnosDelDia, slotInicial, slotFin);
                 
                 if (!ocupado) {
                     slotDisponibles.add(new SlotDisponibleDTO(slotInicial, slotFin));
@@ -70,5 +76,15 @@ public class CalculadoraDisponibilidadService {
             }
         }
         return slotDisponibles;
+    }
+
+    private boolean verificarSolapamiento(List<Turno> turnos, LocalDateTime slotInicio, LocalDateTime slotFin) {
+        for (Turno turno : turnos) {
+            // Lógica de colisión: (StartA < EndB) && (EndA > StartB)
+            if (turno.getFechaHoraInicio().isBefore(slotFin) && turno.getFechaHoraFin().isAfter(slotInicio)) {
+                return true; 
+            }
+        }
+        return false;
     }
 }

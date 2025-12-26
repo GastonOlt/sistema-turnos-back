@@ -16,6 +16,7 @@ import com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno;
 import com.gaston.sistema.turno.sistematunos_back.entities.Resenia;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ClienteRepository;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
+import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 
 
 @Service
@@ -23,10 +24,12 @@ public class ClienteServiceImp implements ClienteService{
 
     private final ClienteRepository clienteRepository;
     private final ReseniaRepository reseniaRepository;
-    
-    public ClienteServiceImp(ClienteRepository clienteRepository, ReseniaRepository reseniaRepository) {
+    private final TurnoRepository turnoRepository;
+
+    public ClienteServiceImp(ClienteRepository clienteRepository, ReseniaRepository reseniaRepository, TurnoRepository turnoRepository) {
         this.clienteRepository = clienteRepository;
         this.reseniaRepository = reseniaRepository;
+        this.turnoRepository = turnoRepository;
     }
 
     @Override
@@ -79,8 +82,10 @@ public class ClienteServiceImp implements ClienteService{
     @Override
     @Transactional
     public void eliminarCliente(Long id) {
-        Cliente cliente = obtenerPorId(id);
-        clienteRepository.delete(cliente);
+       if (!clienteRepository.existsById(id)) {
+             throw new IllegalArgumentException("Cliente no encontrado");
+        }
+        clienteRepository.deleteById(id);
     }
 
     ////////// TURNOS //////////
@@ -89,12 +94,8 @@ public class ClienteServiceImp implements ClienteService{
     @Override
     @Transactional(readOnly = true)
     public List<TurnoClienteDTO> obtenerTurnosActivos(Long clienteId) {
-        Cliente cliente = obtenerPorId(clienteId);
-        LocalDateTime ahora = LocalDateTime.now();
-        
-        return cliente.getTurnos().stream()
-                .filter(turno -> turno.getFechaHoraInicio().isAfter(ahora) && 
-                               turno.getEstado() == EstadoTurno.CONFIRMADO || turno.getEstado() == EstadoTurno.PENDIENTE)
+       return turnoRepository.buscarTurnosActivosCliente(clienteId, LocalDateTime.now())
+                .stream()
                 .map(this::convertirATurnoClienteDTO)
                 .collect(Collectors.toList());
     }
@@ -102,13 +103,8 @@ public class ClienteServiceImp implements ClienteService{
     @Override
     @Transactional(readOnly = true)
     public List<TurnoClienteDTO> obtenerHistorialTurnos(Long clienteId) {
-        Cliente cliente = obtenerPorId(clienteId);
-        LocalDateTime ahora = LocalDateTime.now();
-        
-        return cliente.getTurnos().stream()
-                .filter(turno -> turno.getFechaHoraInicio().isBefore(ahora) || 
-                               turno.getEstado() == EstadoTurno.FINALIZADO ||
-                               turno.getEstado() == EstadoTurno.CANCELADO)
+      return turnoRepository.buscarHistorialCliente(clienteId, LocalDateTime.now())
+                .stream()
                 .map(this::convertirATurnoClienteDTO)
                 .collect(Collectors.toList());
     }
@@ -116,18 +112,19 @@ public class ClienteServiceImp implements ClienteService{
     @Override
     @Transactional
     public void cancelarTurno(Long clienteId, Long turnoId) {
-        Cliente cliente = obtenerPorId(clienteId);
-        
-        Turno turno = cliente.getTurnos().stream()
-                .filter(t -> t.getId().equals(turnoId))
-                .findFirst()
+        Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado"));
+
+        if (!turno.getCliente().getId().equals(clienteId)) {
+            throw new IllegalArgumentException("Este turno no pertenece al cliente");
+        }
         
         // if (turno.getFechaHoraInicio().isBefore(LocalDateTime.now())) {
         //     throw new IllegalArgumentException("No se puede cancelar un turno pasado");
         // }
         
         turno.setEstado(EstadoTurno.CANCELADO);
+        turnoRepository.save(turno);
     }
 
     private ClienteDTO convertirAClienteDTO(Cliente cliente) {

@@ -39,6 +39,8 @@ public class Local {
     private Double latitud;
     private Double longitud;
 
+    private Double promedioCalificacion;
+    
     @OneToOne(mappedBy = "local")
     private Dueno dueno;
 
@@ -186,6 +188,14 @@ public class Local {
 
     public void setTurnos(List<Turno> turnos) {
         this.turnos = turnos;
+    }
+
+    public Double getPromedioCalificacion() {
+       return promedioCalificacion != null ? promedioCalificacion : 0.0;
+    }
+
+    public void setPromedioCalificacion(Double promedioCalificacion) {
+        this.promedioCalificacion = promedioCalificacion;
     }
 
     

@@ -11,20 +11,16 @@ import com.gaston.sistema.turno.sistematunos_back.dto.LocalDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Dueno;
 import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.repositories.LocalRepository;
-import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
 
 @Service
 public class LocalServiceImp implements LocalService{
 
     private final LocalRepository localRepository;
     private final DuenoServiceImp duenoService;
-    private final ReseniaRepository reseniaRepository;
 
-    public LocalServiceImp(LocalRepository localRepository, DuenoServiceImp duenoService,
-            ReseniaRepository reseniaRepository) {
+    public LocalServiceImp(LocalRepository localRepository, DuenoServiceImp duenoService) {
         this.localRepository = localRepository;
         this.duenoService = duenoService;
-        this.reseniaRepository = reseniaRepository;
     }
 
     @Override
@@ -69,8 +65,8 @@ public class LocalServiceImp implements LocalService{
         String tipoLocal, String provincia, String nombre, Pageable pageable) {
 
         if (tipoLocal == null && provincia == null && nombre == null) {
-        return localRepository.findAll(pageable)
-                .map(this::convertirADTO); 
+            return localRepository.findAll(pageable)
+                           .map(this::convertirADTO); 
         }
 
         Specification<Local> spec = Specification.allOf();
@@ -95,9 +91,6 @@ public class LocalServiceImp implements LocalService{
     }
 
     private LocalDTO convertirADTO(Local local) {
-        LocalDTO dto = new LocalDTO(local);
-        Double promedio = reseniaRepository.obtenerPromedioCalificacion(local.getId());
-        dto.setPromedioCalificacion(promedio != null ? Math.round(promedio * 10.0) / 10.0 : 0.0);
-        return dto;
+             return new LocalDTO(local);
     }
 }

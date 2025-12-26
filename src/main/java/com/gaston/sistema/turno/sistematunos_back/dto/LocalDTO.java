@@ -38,6 +38,7 @@ public class LocalDTO {
         this.latitud = local.getLatitud();
         this.longitud = local.getLongitud();
         this.nombreDueno = local.getDueno().getNombre();
+        this.promedioCalificacion = local.getPromedioCalificacion();
         
         if (local.getImagenes() != null) {
             this.imagenes = local.getImagenes().stream()
