@@ -2,7 +2,6 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,8 +11,12 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.DuenoRepository;
 @Service
 public class DuenoServiceImp implements DuenoService {
 
-    @Autowired
-    private DuenoRepository duenoRepository;
+    private final DuenoRepository duenoRepository;
+
+    public DuenoServiceImp(DuenoRepository duenoRepository) {
+      this.duenoRepository = duenoRepository;
+    }
+
 
     @Override
     @Transactional

@@ -3,7 +3,6 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,21 +25,21 @@ import jakarta.validation.Valid;
 @Service
 public class AuthService {
 
+    private final ClienteService clienteService;
+    private final DuenoService duenoService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
+    
+    public AuthService(ClienteService clienteService, DuenoService duenoService, PasswordEncoder passwordEncoder,
+            JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager) {
+        this.clienteService = clienteService;
+        this.duenoService = duenoService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.authenticationManager = authenticationManager;
+    }
 
-    @Autowired
-    private ClienteService clienteService;
-    
-    @Autowired
-    private DuenoService duenoService;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-    
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @Transactional
     public UsuarioDTO registrarCliente(Cliente cliente){

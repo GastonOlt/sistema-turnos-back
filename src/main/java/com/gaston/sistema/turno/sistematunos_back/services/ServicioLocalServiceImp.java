@@ -2,7 +2,6 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +12,13 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.ServicioLocalRepo
 @Service
 public class ServicioLocalServiceImp implements ServicioLocalService{
 
-    @Autowired
-    private ServicioLocalRepository servicioLocalRepository;
+    private final ServicioLocalRepository servicioLocalRepository;
+    private final LocalService localService;
 
-    @Autowired
-    private LocalService localService;
+    public ServicioLocalServiceImp(ServicioLocalRepository servicioLocalRepository, LocalService localService) {
+        this.servicioLocalRepository = servicioLocalRepository;
+        this.localService = localService;
+    }
 
     @Override
     public ServicioLocal crearServicio(ServicioLocal servicio, Long duenoId) {

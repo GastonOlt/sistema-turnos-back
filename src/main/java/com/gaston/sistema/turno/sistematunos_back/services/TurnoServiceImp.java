@@ -2,17 +2,10 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.TextStyle;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +15,6 @@ import com.gaston.sistema.turno.sistematunos_back.dto.TurnoResponseDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Cliente;
 import com.gaston.sistema.turno.sistematunos_back.entities.Empleado;
 import com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno;
-import com.gaston.sistema.turno.sistematunos_back.entities.Horario;
 import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.entities.ServicioLocal;
 import com.gaston.sistema.turno.sistematunos_back.entities.Turno;
@@ -31,23 +23,26 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 @Service
 public class TurnoServiceImp implements TurnoService {
 
-    @Autowired
-    private TurnoRepository turnoRepository;
+    private final TurnoRepository turnoRepository;
+    private final EmpleadoService empleadoService;
+    private final ServicioLocalService servicioLocalService;
+    private final LocalService localService;
+    private final ClienteService clienteService;
+    private final EmailService emailService;
+    private final CalculadoraDisponibilidadService calculadoraDisponibilidadService;
 
-    @Autowired
-    private EmpleadoService empleadoService;
+    public TurnoServiceImp(TurnoRepository turnoRepository, EmpleadoService empleadoService,
+            ServicioLocalService servicioLocalService, LocalService localService, ClienteService clienteService,
+            EmailService emailService, CalculadoraDisponibilidadService calculadoraDisponibilidadService) {
+        this.turnoRepository = turnoRepository;
+        this.empleadoService = empleadoService;
+        this.servicioLocalService = servicioLocalService;
+        this.localService = localService;
+        this.clienteService = clienteService;
+        this.emailService = emailService;
+        this.calculadoraDisponibilidadService = calculadoraDisponibilidadService;
+    }
 
-    @Autowired
-    private ServicioLocalService servicioLocalService;
-
-    @Autowired
-    private LocalService localService;
-
-    @Autowired
-    private ClienteService clienteService;
-
-    @Autowired
-    private EmailService emailService;
 
     @Override
     @Transactional
@@ -63,109 +58,79 @@ public class TurnoServiceImp implements TurnoService {
         Local localDb = localService.obtenerLocalPorId(turnoRequest.getLocalId());
         Cliente clienteDb = clienteService.obtenerPorId(clienteId);
 
-        if(!empleadoDb.getLocal().getId().equals(localDb.getId())){
-            throw new RuntimeException("El empleado no pertenece a este local");
+        validarConsistenciaLocal(empleadoDb, servicioDb, localDb);
+
+        LocalDateTime fechaHoraInicio = turnoRequest.getFechaHoraInicio();
+        
+        if (fechaHoraInicio.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("No se puede reservar turnos en el pasado");
         }
 
-        if (!servicioDb.getLocal().getId().equals(localDb.getId())) {
-            throw new RuntimeException("El servicio no pertenece a este local");
-        }
-
-        LocalDateTime fechaHoraFin = turnoRequest.getFechaHoraInicio().plusMinutes(servicioDb.getTiempo());
-        boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoDb.getId(), turnoRequest.getFechaHoraInicio(), fechaHoraFin);
-
+        LocalDateTime fechaHoraFin =fechaHoraInicio.plusMinutes(servicioDb.getTiempo());
+       
+        boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoDb.getId(), fechaHoraInicio, fechaHoraFin);
         if(ocupado){
                 throw new RuntimeException("El empleado no está disponible en ese horario");
         }
-        if(turnoRequest.getFechaHoraInicio().isBefore(LocalDateTime.now())){
-                throw new RuntimeException("no se puede reservar turnos en el pasado");
-        }
 
-        Turno turno = new Turno();
-
-        turno.setCliente(clienteDb);
-        turno.setEmpleado(empleadoDb);
-        turno.setServicio(servicioDb);
-        turno.setLocal(localDb);
-        turno.setFechaHoraInicio(turnoRequest.getFechaHoraInicio());
-        turno.setFechaHoraFin(fechaHoraFin);
-        turno.setEstado(EstadoTurno.PENDIENTE);
-        turno.setAdelantado(false);
-
+        Turno turno = crearEntidadTurno(clienteDb, empleadoDb, servicioDb, localDb, fechaHoraInicio, fechaHoraFin, EstadoTurno.PENDIENTE);
         Turno turnoNuevo = turnoRepository.save(turno);
 
         return convertirDto(turnoNuevo);
 
     }
 
-    
+    //para que el cliente pueda ver los slots disponibles para el empleado y servicio seleccionado
+    @Override
+    @Transactional(readOnly = true)
+    public List<SlotDisponibleDTO> obtenerSlotsDisponibles(Long localId, Long empleadoId, Long servicioId, LocalDate fecha) {
+        Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(empleadoId);
+        ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(servicioId);
+        Local localDb = localService.obtenerLocalPorId(localId);
+
+        validarConsistenciaLocal(empleadoDb, servicioDb, localDb);
+
+        return calculadoraDisponibilidadService.calcularSlots(empleadoDb, servicioDb, fecha);
+    }
+
+    //para que el empleado pueda ver los slots disponibles para el servicio que brinda
     @Override
     @Transactional(readOnly = true)
     public List<SlotDisponibleDTO> obtenerSlotsDisponibles(Long empleadoId, Long servicioId, LocalDate fecha) {
          Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(empleadoId);
          Long localId = empleadoDb.getLocal().getId();
-         return this.obtenerSlotsDisponibles( localId, empleadoId, servicioId, fecha);
+         return this.obtenerSlotsDisponibles(localId, empleadoId, servicioId, fecha);
     }
-    
+
+   
+    //metodo para que el empleado pueda crear el registro de turno a un cliente sin reserva previa , para que quede registro
     @Override
-    @Transactional(readOnly = true)
-    public List<SlotDisponibleDTO> obtenerSlotsDisponibles(Long localId, Long empleadoId,
-                                                                    Long servicioId,LocalDate fecha) {
+    @Transactional
+    public TurnoResponseDTO crearTurnoEmpleado(Long empleadoId, TurnoRequestDTO turnoRequest){
         Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(empleadoId);
-        ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(servicioId);
-        Local localDb = localService.obtenerLocalPorId(localId);
+        Local localDb = empleadoDb.getLocal();
+        ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(turnoRequest.getServicioId());
 
-        if (!empleadoDb.getLocal().getId().equals(localDb.getId())) {
-        throw new RuntimeException("El empleado no pertenece a este local");
-        }
-        if (!servicioDb.getLocal().getId().equals(localDb.getId())) {
-            throw new RuntimeException("El servicio no pertenece a este local");
+        Cliente clienteAnonimo = clienteService.findByEmail("anonimo@sistema.com")
+                                            .orElseThrow(() -> new RuntimeException("Cliente anónimo no configurado"));
+
+        LocalDateTime fechaInicio = turnoRequest.getFechaHoraInicio();
+        LocalDateTime fechaFin = fechaInicio.plusMinutes(servicioDb.getTiempo());
+
+        boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoId,fechaInicio,fechaFin);
+        if(ocupado){
+            throw new IllegalArgumentException("Horario no disponible para hacer una reserva");
         }
 
-        Locale espaniol =  Locale.of("es", "ES");
-        String diaSemana = fecha.getDayOfWeek().getDisplayName(TextStyle.FULL, espaniol);
-        String diaSemanaCapitalized = Character.toUpperCase(diaSemana.charAt(0)) + diaSemana.substring(1).toLowerCase();
+        Turno turno = crearEntidadTurno(clienteAnonimo, empleadoDb, servicioDb, localDb, fechaInicio, fechaFin, EstadoTurno.CONFIRMADO);
+        Turno nuevoTurno = turnoRepository.save(turno);
         
-        List<Horario> rangos = empleadoDb.getHorarios().stream()
-        .filter(h -> h.getDiaSemana().equals(diaSemanaCapitalized) && h.isActivo())
-        .sorted(Comparator.comparing(Horario::getHorarioApertura))
-        .collect(Collectors.toList());
-        
-        if(rangos.isEmpty()){
-            return new ArrayList<>();
-        }
-
-        int duracionMin = servicioDb.getTiempo();
-        int intervaloMin =15;
-
-        List<SlotDisponibleDTO> slotDisponibles = new ArrayList<>();
-
-        for(Horario rango : rangos){
-            LocalTime apertura = rango.getHorarioApertura();
-            LocalTime cierre = rango.getHorarioCierre();
-            
-            while (!apertura.plusMinutes(duracionMin).isAfter(cierre)) {
-                LocalDateTime slotInicial = LocalDateTime.of(fecha,apertura);
-                LocalDateTime slotFin = slotInicial.plusMinutes(duracionMin);
-
-                if(slotInicial.isBefore(LocalDateTime.now())){
-                    apertura = apertura.plusMinutes(intervaloMin);
-                    continue;
-                }
-
-                boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoId, slotInicial, slotFin);
-                if(!ocupado){
-                    slotDisponibles.add(new SlotDisponibleDTO(slotInicial,slotFin));
-                }
-
-                apertura = apertura.plusMinutes(intervaloMin);
-            }
-        }
-        return slotDisponibles;
+        return convertirDto(nuevoTurno);
     }
 
-    //para actualizar los turnos que estan confirmados antes de esta fecha
-    @Scheduled(fixedRate = 600000)
+
+     //para actualizar los turnos que estan confirmados antes de esta fecha
+    @Override
     @Transactional
     public void actualizarTurnosFinalizados(){
         LocalDateTime ahora = LocalDateTime.now();
@@ -181,7 +146,7 @@ public class TurnoServiceImp implements TurnoService {
     }
 
     //para enviar email a los turnos que estan confirmados , de el dia actual 
-    @Scheduled(cron = "0 0 8 * * *") 
+    @Override 
     @Transactional(readOnly = true)
     public void enviarRecordatorioTurno(){
         LocalDateTime inicioDia = LocalDate.now().atStartOfDay();
@@ -189,7 +154,6 @@ public class TurnoServiceImp implements TurnoService {
 
         List<Turno> turnosDelDia = turnoRepository.findByEstadoAndFechaHoraInicioBetween(EstadoTurno.CONFIRMADO,inicioDia,finDia);
 
-        if(!turnosDelDia.isEmpty()){
             for (Turno turno : turnosDelDia) {
                 try {
                     if (turno.getCliente() != null) {
@@ -204,37 +168,29 @@ public class TurnoServiceImp implements TurnoService {
                     System.err.println("Error enviando recordatorio al turno " + turno.getId());
                 }
             }
-        }
     }
     
-    //metodo para que el empleado pueda crear el registro de turno a un cliente sin reserva previa , para que quede registro
-    @Override
-    @Transactional
-    public TurnoResponseDTO crearTurnoEmpleado(Long empleadoId, TurnoRequestDTO turnoRequest){
-        Empleado empleadoDb = empleadoService.obtenerEmpleadoEntity(empleadoId);
-        Long localId = empleadoDb.getLocal().getId();
-        Local localDb = localService.obtenerLocalPorId(localId);
-        ServicioLocal servicioDb = servicioLocalService.obtenerServicioEntity(turnoRequest.getServicioId());
-        Cliente clienteAnonimo = clienteService.findByEmail("anonimo@sistema.com")
-                                            .orElseThrow(() -> new RuntimeException("Cliente anónimo no configurado"));
 
-        LocalDateTime horarioFin = turnoRequest.getFechaHoraInicio().plusMinutes(servicioDb.getTiempo());
-        boolean ocupado = turnoRepository.existsByEmpleadoAndHorarioSolapado(empleadoId,turnoRequest.getFechaHoraInicio(),horarioFin);
-        if(ocupado){
-            throw new IllegalArgumentException("Horario no disponible para hacer una reserva");
+    private void validarConsistenciaLocal(Empleado e, ServicioLocal s, Local l) {
+        if (!e.getLocal().getId().equals(l.getId())) {
+            throw new RuntimeException("El empleado no pertenece a este local");
         }
+        if (!s.getLocal().getId().equals(l.getId())) {
+            throw new RuntimeException("El servicio no pertenece a este local");
+        }
+    }
 
+    private Turno crearEntidadTurno(Cliente c, Empleado e, ServicioLocal s, Local l, LocalDateTime inicio, LocalDateTime fin, EstadoTurno estado) {
         Turno turno = new Turno();
-        turno.setCliente(clienteAnonimo);
-        turno.setEmpleado(empleadoDb);
-        turno.setLocal(localDb);
-        turno.setServicio(servicioDb);
-        turno.setFechaHoraInicio(turnoRequest.getFechaHoraInicio());
-        turno.setFechaHoraFin(horarioFin);
-        turno.setEstado(EstadoTurno.CONFIRMADO);
-
-        Turno nuevoTurno = turnoRepository.save(turno);
-        return convertirDto(nuevoTurno);
+        turno.setCliente(c);
+        turno.setEmpleado(e);
+        turno.setServicio(s);
+        turno.setLocal(l);
+        turno.setFechaHoraInicio(inicio);
+        turno.setFechaHoraFin(fin);
+        turno.setEstado(estado);
+        turno.setAdelantado(false);
+        return turno;
     }
 
 

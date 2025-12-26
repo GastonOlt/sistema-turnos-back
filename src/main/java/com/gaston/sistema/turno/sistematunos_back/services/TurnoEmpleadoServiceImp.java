@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,15 +19,17 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 @Service
 public class TurnoEmpleadoServiceImp implements TurnoEmpleadoService{
 
-    @Autowired
-    private EmpleadoService empleadoService;
-
-    @Autowired
-    private TurnoRepository turnoRepository;
-
-    @Autowired 
-    private EmailService emailService;
+    private final EmpleadoService empleadoService;
+    private final TurnoRepository turnoRepository;
+    private final EmailService emailService;
     
+    public TurnoEmpleadoServiceImp(EmpleadoService empleadoService, TurnoRepository turnoRepository,
+            EmailService emailService) {
+        this.empleadoService = empleadoService;
+        this.turnoRepository = turnoRepository;
+        this.emailService = emailService;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<TurnoEmpleadoDTO> listadoTurnoPendientes(Long empleadoId) {

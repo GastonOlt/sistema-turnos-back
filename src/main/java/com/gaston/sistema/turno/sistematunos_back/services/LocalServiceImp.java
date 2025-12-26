@@ -1,7 +1,6 @@
 package com.gaston.sistema.turno.sistematunos_back.services;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,14 +16,16 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository
 @Service
 public class LocalServiceImp implements LocalService{
 
-    @Autowired
-    private LocalRepository localRepository;
+    private final LocalRepository localRepository;
+    private final DuenoServiceImp duenoService;
+    private final ReseniaRepository reseniaRepository;
 
-    @Autowired
-    private DuenoServiceImp duenoService;
-
-    @Autowired
-    private ReseniaRepository reseniaRepository;
+    public LocalServiceImp(LocalRepository localRepository, DuenoServiceImp duenoService,
+            ReseniaRepository reseniaRepository) {
+        this.localRepository = localRepository;
+        this.duenoService = duenoService;
+        this.reseniaRepository = reseniaRepository;
+    }
 
     @Override
     @Transactional

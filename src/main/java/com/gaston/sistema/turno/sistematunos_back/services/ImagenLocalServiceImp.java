@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,11 +15,13 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.ImagenLocalReposi
 @Service
 public class ImagenLocalServiceImp  implements ImagenLocalService{
 
-    @Autowired
-    private ImagenLocalRepository imagenRepository;
+    private final ImagenLocalRepository imagenRepository;
+    private final LocalService localService;
 
-    @Autowired
-    private LocalService localService;
+    public ImagenLocalServiceImp(ImagenLocalRepository imagenRepository, LocalService localService) {
+        this.imagenRepository = imagenRepository;
+        this.localService = localService;
+    }
 
     @Override
     @Transactional
@@ -29,71 +30,47 @@ public class ImagenLocalServiceImp  implements ImagenLocalService{
         List<ImagenLocal> imagenesGuardadas = new ArrayList<>();
         
         Local localDb = localService.obtenerPorDueno(duenoId);
- 
-        int imagenesActuales = localDb.getImagenes().size();
-        int imagenesNuevas = archivos.length;
-        if(imagenesActuales + imagenesNuevas > 5) {
-            throw new IllegalArgumentException("No se pueden subir más de 5 imágenes. Actualmente tienes " + imagenesActuales + " imágenes.");
-        }
+        
+        validarLimiteImagenes(localDb, archivos.length);
 
         for(MultipartFile archivo : archivos){
             try {
-                ImagenLocal imagen = new ImagenLocal();
-                imagen.setNombreArchivo(archivo.getOriginalFilename());
-                imagen.setTipoArchivo(archivo.getContentType());
-                imagen.setDatosImagen(archivo.getBytes());
-                imagen.setLocal(localDb);
-
-                localDb.getImagenes().add(imagen);
-                
+                ImagenLocal imagen = crearEntidadImagen(archivo, localDb);
                 imagenesGuardadas.add(imagenRepository.save(imagen));
-
             } catch (IOException  e) {
                 throw new IllegalArgumentException("Error al procesar la imagen "+archivo.getOriginalFilename() ,e);
             }
         }
         return imagenesGuardadas;
-        
     }   
 
     @Override
     @Transactional
     public List<ImagenLocal> editarImagen(Long duenoId, List<Long> idsAEliminar, MultipartFile[] archivosNuevos) {
      
-        try {
-               Local localDb = localService.obtenerPorDueno(duenoId);
+         Local localDb = localService.obtenerPorDueno(duenoId);
 
         if (idsAEliminar != null && !idsAEliminar.isEmpty()) {
-        List<ImagenLocal> imagenesAEliminar = imagenRepository.findAllById(idsAEliminar);
-        
-        for (ImagenLocal imagen : imagenesAEliminar) {
-            if (!imagen.getLocal().getId().equals(localDb.getId())) {
-                throw new IllegalArgumentException("La imagen no pertenece a este local");
+            List<ImagenLocal> imagenesAEliminar = imagenRepository.findAllById(idsAEliminar);
+            
+            for (ImagenLocal imagen : imagenesAEliminar) {
+                if (!imagen.getLocal().getId().equals(localDb.getId())) {
+                    throw new IllegalArgumentException("La imagen no pertenece a este local");
+                }
+                
             }
-              
-        }
+            localDb.getImagenes().removeAll(imagenesAEliminar);
+            imagenRepository.deleteAll(imagenesAEliminar);
+       }
 
-        imagenRepository.deleteAll(imagenesAEliminar);
-        localDb.getImagenes().removeAll(imagenesAEliminar);
-      }
-
-        int imagenesActuales = localDb.getImagenes().size();
-        int imagenesNuevas = archivosNuevos != null ? archivosNuevos.length : 0;
-        if (imagenesActuales + imagenesNuevas > 5) {
-            throw new IllegalArgumentException("No se pueden tener más de 5 imágenes. Actualmente tienes " + imagenesActuales + " imágenes.");
-        }
+        int cantidadNuevas = (archivosNuevos != null) ? archivosNuevos.length : 0;
+        validarLimiteImagenes(localDb, cantidadNuevas);
 
         List<ImagenLocal> imagenesGuardadas = new ArrayList<>();
         if(archivosNuevos != null){
             for(MultipartFile  archivo : archivosNuevos){
                 try {
-                    ImagenLocal imagen = new ImagenLocal();
-                    imagen.setNombreArchivo(archivo.getOriginalFilename());
-                    imagen.setTipoArchivo(archivo.getContentType());
-                    imagen.setDatosImagen(archivo.getBytes());
-                    imagen.setLocal(localDb);
-
-                    localDb.getImagenes().add(imagen);
+                    ImagenLocal imagen = crearEntidadImagen(archivo, localDb);
                     imagenesGuardadas.add(imagenRepository.save(imagen));
             } catch (IOException e) {
                 throw new IllegalArgumentException("Error al procesar la imagen " + archivo.getOriginalFilename() + e.getMessage());
@@ -101,23 +78,14 @@ public class ImagenLocalServiceImp  implements ImagenLocalService{
             }
         }
         return imagenesGuardadas;
-
-
-            
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error al actualizar la imagen " + e.getMessage());
-        }
     }
+
 
     @Override
     @Transactional(readOnly = true)
     public List<ImagenLocal> obtenerImagenPorLocal(Long duenoId) {
-      try {
         Local localDb = localService.obtenerPorDueno(duenoId);
-       return imagenRepository.findByLocalId( localDb.getId());    
-    } catch (Exception e) {
-        throw new IllegalArgumentException(e.getMessage());
-    } 
+        return imagenRepository.findByLocalId( localDb.getId());    
     }
     
     @Override
@@ -127,4 +95,20 @@ public class ImagenLocalServiceImp  implements ImagenLocalService{
      
     }
 
+    private void validarLimiteImagenes(Local local, int nuevas) {
+        int actuales = local.getImagenes().size();
+        if (actuales + nuevas > 5) {
+            throw new IllegalArgumentException("No se pueden tener más de 5 imágenes. Actualmente tienes " + actuales + " y quieres agregar " + nuevas);
+        }
+    }
+
+    private ImagenLocal crearEntidadImagen(MultipartFile archivo, Local local) throws IOException {
+        ImagenLocal imagen = new ImagenLocal();
+        imagen.setNombreArchivo(archivo.getOriginalFilename());
+        imagen.setTipoArchivo(archivo.getContentType());
+        imagen.setDatosImagen(archivo.getBytes());
+        imagen.setLocal(local);
+        local.getImagenes().add(imagen);
+        return imagen;
+    }
 }

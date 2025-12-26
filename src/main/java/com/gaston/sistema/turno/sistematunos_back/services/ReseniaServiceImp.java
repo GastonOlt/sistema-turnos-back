@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +18,13 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 @Service
 public class ReseniaServiceImp implements ReseniaService {
 
-    @Autowired
-    private ReseniaRepository reseniaRepository;
+    private final ReseniaRepository reseniaRepository;
+    private final TurnoRepository turnoRepository;
 
-    @Autowired
-    private TurnoRepository turnoRepository;
+    public ReseniaServiceImp(ReseniaRepository reseniaRepository, TurnoRepository turnoRepository) {
+        this.reseniaRepository = reseniaRepository;
+        this.turnoRepository = turnoRepository;
+    }
 
     @Override
     @Transactional

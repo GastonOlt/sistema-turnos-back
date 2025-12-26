@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +21,13 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository
 @Service
 public class ClienteServiceImp implements ClienteService{
 
-    @Autowired
-    private ClienteRepository clienteRepository;
-
-    @Autowired
-    private ReseniaRepository reseniaRepository;
+    private final ClienteRepository clienteRepository;
+    private final ReseniaRepository reseniaRepository;
+    
+    public ClienteServiceImp(ClienteRepository clienteRepository, ReseniaRepository reseniaRepository) {
+        this.clienteRepository = clienteRepository;
+        this.reseniaRepository = reseniaRepository;
+    }
 
     @Override
     @Transactional
@@ -43,13 +44,9 @@ public class ClienteServiceImp implements ClienteService{
     @Override
     @Transactional(readOnly = true)
     public Cliente obtenerPorId(Long id) {
-      try {
           Cliente clienteDb = clienteRepository.findById(id).orElseThrow(()->
                                                     new IllegalArgumentException("no se encontro el cliente con este Id: "+id));
           return clienteDb;
-      } catch (Exception e) {
-              throw new IllegalArgumentException(e.getMessage());
-      }
     }
     
     @Override

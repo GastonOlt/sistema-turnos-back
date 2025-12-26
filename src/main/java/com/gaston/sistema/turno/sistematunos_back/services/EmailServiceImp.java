@@ -3,7 +3,6 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -11,10 +10,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceImp implements EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    public EmailServiceImp(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     @Override
     public void enviarConfirmacionTurno(String destinatario, String nombreCliente, LocalDateTime fechaHora, String servicio, String nombreLocal , String ubiLocal) {

@@ -3,7 +3,6 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 import java.util.Base64;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,36 +19,43 @@ import com.gaston.sistema.turno.sistematunos_back.validation.EmailExistenteExcep
 @Service
 public class EmpleadoServiceImp implements EmpleadoService {
 
-    @Autowired
-    private EmpleadoRepository empleadoRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final LocalService localService;
+    private final ImagenLocalRepository imagenLocalRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private LocalService localService;
+    public EmpleadoServiceImp(EmpleadoRepository empleadoRepository, LocalService localService,
+            ImagenLocalRepository imagenLocalRepository, PasswordEncoder passwordEncoder) {
+        this.empleadoRepository = empleadoRepository;
+        this.localService = localService;
+        this.imagenLocalRepository = imagenLocalRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private ImagenLocalRepository imagenLocalRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Override
     public EmpleadoDto crearEmpleado(Empleado empleado, Long duenoId , MultipartFile archivo) {
-        try {
            if(empleadoRepository.findByEmail(empleado.getEmail()).isPresent()){
                throw new EmailExistenteException("Email ya registrado");
            }
-
-           ImagenLocal imgEmpleado = new ImagenLocal();
-           imgEmpleado.setNombreArchivo(archivo.getOriginalFilename());
-           imgEmpleado.setTipoArchivo(archivo.getContentType());
-           imgEmpleado.setDatosImagen(archivo.getBytes());
-
-           empleado.setImagenEmpleado(imgEmpleado);
 
            Local localDb = localService.obtenerPorDueno(duenoId);
            if(localDb.getEmpleados().size() >=5 ){
               throw new IllegalArgumentException("No puedes tener mas de 5 empleados");
            }
+
+           try{ 
+                if (archivo != null && !archivo.isEmpty()) {
+                    ImagenLocal imgEmpleado = new ImagenLocal();
+                    imgEmpleado.setNombreArchivo(archivo.getOriginalFilename());
+                    imgEmpleado.setTipoArchivo(archivo.getContentType());
+                    imgEmpleado.setDatosImagen(archivo.getBytes());
+                    empleado.setImagenEmpleado(imgEmpleado);
+                }
+           }catch(Exception e){
+              throw new RuntimeException("Error al guardar la imagen del empleado: " + e);
+           }
+          
            localDb.getEmpleados().add(empleado);
 
            empleado.setPassword(passwordEncoder.encode(empleado.getPassword()));
@@ -59,15 +65,11 @@ public class EmpleadoServiceImp implements EmpleadoService {
            Empleado nuevoEmpleado = empleadoRepository.save(empleado);
         
            return  empleadoDto(nuevoEmpleado);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
     }
 
     
     @Override
     public EmpleadoDto editarEmpleado(Empleado empleado, MultipartFile archivo,Long empleadoId,Long duenoId) {
-        try{
             Empleado empleadoDb = empleadoRepository.findById(empleadoId).orElseThrow(() ->
                                      new IllegalArgumentException("No se encontro el empleado con ese id "+empleado.getId()));
 
@@ -81,24 +83,25 @@ public class EmpleadoServiceImp implements EmpleadoService {
             empleadoDb.setEmail(empleado.getEmail());
             // empleadoDb.setPassword(empleado.getPassword());
 
-            if(archivo != null && !archivo.isEmpty()){
-                ImagenLocal img = empleadoDb.getImagenEmpleado();
-                if (img != null) {
-                    imagenLocalRepository.delete(img);
-                }
-                ImagenLocal imgEmpleado = new ImagenLocal();
-                imgEmpleado.setNombreArchivo(archivo.getOriginalFilename());
-                imgEmpleado.setTipoArchivo(archivo.getContentType());
-                imgEmpleado.setDatosImagen(archivo.getBytes());
+            try{
+                if(archivo != null && !archivo.isEmpty()){
+                    ImagenLocal img = empleadoDb.getImagenEmpleado();
+                    if (img != null) {
+                        imagenLocalRepository.delete(img);
+                    }
+                    ImagenLocal imgEmpleado = new ImagenLocal();
+                    imgEmpleado.setNombreArchivo(archivo.getOriginalFilename());
+                    imgEmpleado.setTipoArchivo(archivo.getContentType());
+                    imgEmpleado.setDatosImagen(archivo.getBytes());
 
-                empleadoDb.setImagenEmpleado(imgEmpleado);
+                    empleadoDb.setImagenEmpleado(imgEmpleado);
+               }
+            } catch (Exception e) {
+                throw new RuntimeException("Error al actualizar la imagen del empleado: " + e);
             }
 
             Empleado empleadoEditado = empleadoRepository.save(empleadoDb);
             return empleadoDto(empleadoEditado);
-        }catch(Exception e){
-            throw new RuntimeException(e.getMessage());
-         }
     }
     
 
@@ -117,7 +120,9 @@ public class EmpleadoServiceImp implements EmpleadoService {
      @Override
      public List<EmpleadoDto> obtenerEmpleados(Long duenoId) {
         Local localDb = localService.obtenerPorDueno(duenoId);
-         return empleadoRepository.findByLocalId(localDb.getId()).stream().map(emple -> empleadoDto(emple)).toList();
+         return empleadoRepository.findByLocalId(localDb.getId()).stream().
+                                    map(emple -> empleadoDto(emple))
+                                    .toList();
       }
         
     @Override
@@ -149,8 +154,8 @@ public class EmpleadoServiceImp implements EmpleadoService {
             respDto.setEspecialidad(empleado.getEspecialidad());
 
             if(empleado.getImagenEmpleado() != null){
-            respDto.setDatosImagen(Base64.getEncoder().encodeToString(empleado.getImagenEmpleado().getDatosImagen()));
-            respDto.setTipoContenido(empleado.getImagenEmpleado().getTipoArchivo());
+                respDto.setDatosImagen(Base64.getEncoder().encodeToString(empleado.getImagenEmpleado().getDatosImagen()));
+                respDto.setTipoContenido(empleado.getImagenEmpleado().getTipoArchivo());
             }
             return respDto;
     }
