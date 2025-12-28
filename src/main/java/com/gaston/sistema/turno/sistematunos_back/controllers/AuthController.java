@@ -2,7 +2,9 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,7 @@ import com.gaston.sistema.turno.sistematunos_back.services.AuthService;
 
 import jakarta.validation.Valid;
 
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -43,12 +46,21 @@ public class AuthController {
     
     
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> loginCliente(@RequestBody LoginRequest req){
-        Map<String,Object> resp = authService.Login(req);
-        return ResponseEntity.status(HttpStatus.OK).body(resp);
+    public ResponseEntity<?> loginCliente(@RequestBody LoginRequest req){
+        Map<String, ResponseCookie> cookies = authService.Login(req);
+        return ResponseEntity.status(HttpStatus.OK)
+                   .header(HttpHeaders.SET_COOKIE, cookies.get("jwt").toString())
+                   .header(HttpHeaders.SET_COOKIE, cookies.get("refreshToken").toString())
+                   .body((Map.of("mensaje", "Login exitoso")));
     }
 
-
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refrescarToken(@CookieValue(name = "refreshToken") String refreshTokenValue) {
+        Map<String, ResponseCookie> nuevasCookies = authService.refrescarSesionConCookies(refreshTokenValue);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, nuevasCookies.get("jwt").toString())
+                .header(HttpHeaders.SET_COOKIE, nuevasCookies.get("refresh").toString())
+                .body(Map.of("mensaje", "Token renovado exitosamente"));
+    }
 }
-
-

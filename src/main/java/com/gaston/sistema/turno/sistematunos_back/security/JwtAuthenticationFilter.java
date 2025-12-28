@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -28,31 +29,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
        
         try{
-        String token = getTokenFromRequest(request);
+            String token = null;
+            if (request.getCookies() != null) {
+                for (Cookie cookie : request.getCookies()) {
+                    if ("accessToken".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                    }
+                }
+            }
 
-        if(StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)){
-            Long id = jwtTokenProvider.getIdFromToken(token);
+            if(StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)){
+                Long id = jwtTokenProvider.getIdFromToken(token);
 
-            UserPrincipal user = (UserPrincipal) customUserDetailsService.loadUserById(id);
+                UserPrincipal user = (UserPrincipal) customUserDetailsService.loadUserById(id);
 
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null ,  user.getAuthorities());
-            
-            SecurityContextHolder.getContext().setAuthentication(auth);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null ,  user.getAuthorities());
+                
+                SecurityContextHolder.getContext().setAuthentication(auth);
 
-        }
+            }
 
-    } catch(Exception ex){
-        logger.error("No se pudo setear el usuario Autenticado en el contexto de seguridad", ex);
+        } catch(Exception ex){
+                logger.error("No se pudo setear el usuario Autenticado en el contexto de seguridad", ex);
+            }
+            filterChain.doFilter(request, response);
     }
-     filterChain.doFilter(request, response);
-    }
-
-public String getTokenFromRequest(HttpServletRequest req){
-    String token = req.getHeader("Authorization");
-    if(StringUtils.hasText(token) && token.startsWith("Bearer ")){
-        return token.substring(7);
-    }
-    return null;
-}
 
 }

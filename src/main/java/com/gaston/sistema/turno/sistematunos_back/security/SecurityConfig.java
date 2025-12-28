@@ -53,12 +53,12 @@ public class SecurityConfig {
             .exceptionHandling(excep -> excep.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/autenticacion/**").permitAll()
                 .requestMatchers("/publico/**").permitAll()
 
                 .requestMatchers("/dueno/**").hasRole("DUENO")
                 .requestMatchers("/empleado/**").hasAnyRole("DUENO","EMPLEADO")
-                .requestMatchers("/cliente/**").authenticated()
+                .requestMatchers("/cliente/**").hasRole("CLIENTE")
              
                 .anyRequest().authenticated()
             )
