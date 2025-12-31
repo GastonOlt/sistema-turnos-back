@@ -10,7 +10,7 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 
 public interface LocalService {
         LocalDTO crearLocal(Local local,Long duenoId);
-        Local editarLocal(Local local,Long duenoId);
+        LocalDTO editarLocal(Local local,Long duenoId);
         Local obtenerLocalPorId(Long id);
         Local obtenerPorDueno(Long duenoId);    
 

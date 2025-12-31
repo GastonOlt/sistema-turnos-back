@@ -22,8 +22,12 @@ import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.TurnoEmpleadoService;
 import com.gaston.sistema.turno.sistematunos_back.services.TurnoService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/empleado/agenda")
+@Tag(name = "Turnos - Empleado", description = "Operaciones de reserva y consulta para empleados")
 public class AgendaEmpleadoController {
 
     private final TurnoService turnoService;
@@ -34,6 +38,7 @@ public class AgendaEmpleadoController {
         this.turnoEmpleadoService = turnoEmpleadoService;
     }
 
+    @Operation(summary = "Crear un turno como empleado", description = "Registra un turno para el empleado autenticado si el slot está disponible.")
     @PostMapping
     public ResponseEntity<TurnoResponseDTO> crearTurnoEmpleado(@AuthenticationPrincipal UserPrincipal user ,@RequestBody TurnoRequestDTO request) {
         Long empleadoId = user.getId();
@@ -41,6 +46,7 @@ public class AgendaEmpleadoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTurno);
     }
 
+    @Operation(summary = "Consultar disponibilidad", description = "Devuelve los rangos horarios libres para un servicio y fecha específicos.")
     @GetMapping("/disponibilidad")
     public  ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@AuthenticationPrincipal UserPrincipal user, @RequestParam Long servicioId,
                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {

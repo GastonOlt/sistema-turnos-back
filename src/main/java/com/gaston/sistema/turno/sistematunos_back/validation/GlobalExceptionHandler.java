@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
     
             @ExceptionHandler(CredencialesInvalidasException.class)
             public ResponseEntity<Map<String, String>> handleCredencialesInvalidasException(CredencialesInvalidasException ex) {
-               return ResponseEntity.badRequest().body(Map.of("error",ex.getMessage()));
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", ex.getMessage()));
             }
 
             

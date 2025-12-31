@@ -15,6 +15,8 @@ import com.gaston.sistema.turno.sistematunos_back.entities.ImagenLocal;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.ImagenLocalService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,6 +60,7 @@ public class ImagenLocalController {
 
         
         @GetMapping("/{imagenId}/archivo")
+        @SecurityRequirements()
         public ResponseEntity<byte[]> obtenerImagen(@PathVariable Long imagenId) {
         ImagenLocal imagen = imagenLocalService.findById(imagenId);
                 

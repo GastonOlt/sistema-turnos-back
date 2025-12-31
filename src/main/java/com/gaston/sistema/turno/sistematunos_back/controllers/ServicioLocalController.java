@@ -13,6 +13,8 @@ import com.gaston.sistema.turno.sistematunos_back.entities.ServicioLocal;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.ServicioLocalService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/dueno/servicios")
+@Tag(name = "Gestión de Servicios (Dueño)", description = "ABM de servicios ofrecidos por el local")
 public class ServicioLocalController {
 
     private final ServicioLocalService servicioLocalService;
@@ -35,6 +38,7 @@ public class ServicioLocalController {
         this.servicioLocalService = servicioLocalService;
     }
 
+    @Operation(summary = "Crear Servicio", description = "Agrega un nuevo servicio al local del dueño autenticado.")
     @PostMapping
     public ResponseEntity<ServicioLocal> crearServicio(@Valid @RequestBody ServicioLocal servicio,@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();

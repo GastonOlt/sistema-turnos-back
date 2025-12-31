@@ -19,6 +19,10 @@ import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.ClienteService;
 import com.gaston.sistema.turno.sistematunos_back.services.TurnoService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/cliente/turnos")
+@Tag(name = "Turnos - Cliente", description = "Operaciones de reserva y consulta para clientes")
 public class TurnoClienteController {
 
 
@@ -39,6 +44,7 @@ public class TurnoClienteController {
         this.clienteService = clienteService;
     }
 
+    @Operation(summary = "Reservar un turno", description = "Registra un turno si el slot está disponible. Requiere rol CLIENTE.")
     @PostMapping
     public ResponseEntity<TurnoResponseDTO> reservarTurno(@RequestBody TurnoRequestDTO request, @AuthenticationPrincipal UserPrincipal user) {
        Long clienteId = user.getId();
@@ -46,7 +52,9 @@ public class TurnoClienteController {
        return ResponseEntity.status(HttpStatus.CREATED).body(turno);
     }
 
+    @Operation(summary = "Consultar disponibilidad", description = "Devuelve los rangos horarios libres para un servicio y fecha específicos.")
     @GetMapping("/disponibilidad")
+    @SecurityRequirements()
     public ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@RequestParam Long localId,@RequestParam Long empleadoId, @RequestParam Long servicioId,
                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
 

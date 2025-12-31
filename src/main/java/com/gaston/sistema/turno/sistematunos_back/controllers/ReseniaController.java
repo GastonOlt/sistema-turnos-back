@@ -17,6 +17,7 @@ import com.gaston.sistema.turno.sistematunos_back.dto.ReseniaResponseDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.ReseniaService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 
 @RestController
@@ -38,12 +39,14 @@ public class ReseniaController {
     }
 
     @GetMapping("/publico/locales/{localId}/resenias")
+    @SecurityRequirements()
     public ResponseEntity<List<ReseniaResponseDTO>> verReseniasLocal(@PathVariable Long localId) {
         List<ReseniaResponseDTO> resenias = reseniaService.obtenerReseniasPorLocal(localId);
         return ResponseEntity.status(HttpStatus.OK).body(resenias);
     }
 
     @GetMapping("/publico/locales/{localId}/resenias/promedio")
+    @SecurityRequirements()
     public ResponseEntity<Double> verPromedioLocal(@PathVariable Long localId) {
         Double promedio = reseniaService.obtenerPromedioLocal(localId);
         return ResponseEntity.status(HttpStatus.OK).body(promedio);

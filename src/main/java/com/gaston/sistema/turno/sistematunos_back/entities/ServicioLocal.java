@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,9 +39,11 @@ public class ServicioLocal {
     @ManyToOne
     @JoinColumn(name = "local_id")
     @JsonIgnore
+    @Schema(hidden = true)
     private Local local;
     
     @OneToMany(mappedBy = "servicio",cascade = CascadeType.ALL,orphanRemoval = true)
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Lista de turnos asociados (Solo lectura)")
     private List<Turno> turnos = new ArrayList<>();
     
     public Long getId() {

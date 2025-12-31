@@ -11,6 +11,7 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.LocalService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,9 +46,9 @@ public class LocalController {
     }
     
     @PutMapping
-    public ResponseEntity<Local> editarLocal(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody Local local) {
+    public ResponseEntity<LocalDTO> editarLocal(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody Local local) {
         Long duenoId = user.getId();
-        Local localEdit = localService.editarLocal(local, duenoId);
+        LocalDTO localEdit = localService.editarLocal(local, duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(localEdit);
     }
     

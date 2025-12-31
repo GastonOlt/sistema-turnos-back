@@ -39,10 +39,11 @@ public class LocalServiceImp implements LocalService{
 
     @Override
     @Transactional
-    public Local editarLocal(Local local,Long duenoId) {
+    public LocalDTO editarLocal(Local local,Long duenoId) {
         Local localDb = obtenerPorDueno(duenoId);
         localDb.actualizarDatosLocal(local);
-        return localRepository.save(localDb);
+        Local localActualizado = localRepository.save(localDb);
+        return new LocalDTO(localActualizado);
     }
 
     @Override

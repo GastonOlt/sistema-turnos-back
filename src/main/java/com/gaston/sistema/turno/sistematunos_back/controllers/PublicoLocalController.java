@@ -10,6 +10,7 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.services.ImagenLocalService;
 import com.gaston.sistema.turno.sistematunos_back.services.LocalService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,12 +36,14 @@ public class PublicoLocalController {
     }
 
     @GetMapping("{id}")
+    @SecurityRequirements()
     public ResponseEntity<Local> obtenerLocalPorId(@PathVariable Long id) {
             Local localDb = localService.obtenerLocalPorId(id);
             return ResponseEntity.status(HttpStatus.OK).body(localDb);
     }
     
     @GetMapping
+    @SecurityRequirements()
     public ResponseEntity<Page<LocalDTO>> obtenerLocalesDisponiblesPorTipoOProvinciaONombre(
                                                       @RequestParam(required = false) String tipoLocal ,
                                                       @RequestParam(required = false) String provincia,
@@ -52,6 +55,7 @@ public class PublicoLocalController {
     }
     
     @GetMapping("/imagenes/{id}")
+    @SecurityRequirements()
     public ResponseEntity<byte[]> descargarImagen(@PathVariable Long id) {
         ImagenLocal imagen = imagenLocalService.findById(id);
             

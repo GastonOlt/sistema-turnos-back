@@ -3,6 +3,7 @@ package com.gaston.sistema.turno.sistematunos_back.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,14 +49,18 @@ public class Local {
     private List<ImagenLocal> imagenes = new ArrayList<>();
 
     @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private List<Horario> horarios = new ArrayList<>();
-
+    
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @OneToMany(mappedBy = "local", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Empleado> empleados = new ArrayList<>();
-
+    
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @OneToMany(mappedBy = "local",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServicioLocal> servicios = new ArrayList<>();
     
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @OneToMany(mappedBy = "local",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Turno> turnos = new ArrayList<>();
 
