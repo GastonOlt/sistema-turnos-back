@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gaston.sistema.turno.sistematunos_back.entities.Horario;
+import com.gaston.sistema.turno.sistematunos_back.dto.HorarioDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.HorarioRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.HorarioService;
 
@@ -25,46 +26,48 @@ import jakarta.validation.Valid;
 public class HorarioEmpleadoController {
 
     private final HorarioService horarioService;
-    
+
     public HorarioEmpleadoController(HorarioService horarioService) {
         this.horarioService = horarioService;
     }
 
-    
     @PostMapping
-    public ResponseEntity<Horario> crearHorarioEmpleado(@Valid @RequestBody Horario horario,@AuthenticationPrincipal UserPrincipal user) {
-        Long empleadoId = user.getId(); 
-        Horario nuevoHorario = horarioService.crearHorarioEmpleado(horario, empleadoId);
+    public ResponseEntity<HorarioDTO> crearHorarioEmpleado(@Valid @RequestBody HorarioRequestDTO horarioDto,
+            @AuthenticationPrincipal UserPrincipal user) {
+        Long empleadoId = user.getId();
+        HorarioDTO nuevoHorario = horarioService.crearHorarioEmpleado(horarioDto, empleadoId);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoHorario);
     }
-    
+
     @GetMapping("/{id}")
-    public ResponseEntity<Horario> obtenerHorarioEmpleado(@PathVariable Long id , @AuthenticationPrincipal UserPrincipal user) {
-        Long empleadoId = user.getId(); 
-        Horario horario = horarioService.obtenerHorarioEmpleado(id,empleadoId);
+    public ResponseEntity<HorarioDTO> obtenerHorarioEmpleado(@PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal user) {
+        Long empleadoId = user.getId();
+        HorarioDTO horario = horarioService.obtenerHorarioEmpleado(id, empleadoId);
         return ResponseEntity.status(HttpStatus.OK).body(horario);
     }
 
     @GetMapping
-    public ResponseEntity<List<Horario>> obtenerHorariosEmpleado(@AuthenticationPrincipal UserPrincipal user) {
-        Long empleadoId = user.getId(); 
-        List<Horario> horarios = horarioService.obtenerHorariosEmpleado(empleadoId);
+    public ResponseEntity<List<HorarioDTO>> obtenerHorariosEmpleado(@AuthenticationPrincipal UserPrincipal user) {
+        Long empleadoId = user.getId();
+        List<HorarioDTO> horarios = horarioService.obtenerHorariosEmpleado(empleadoId);
         return ResponseEntity.status(HttpStatus.OK).body(horarios);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Horario> editarHorarioEmpleado(@PathVariable Long id, @RequestBody Horario horario,
-                                                @AuthenticationPrincipal UserPrincipal user) {
-        Long empleadoId = user.getId(); 
-        Horario horarioActulizado = horarioService.editarHorarioEmpleado(horario, id,empleadoId);
+    public ResponseEntity<HorarioDTO> editarHorarioEmpleado(@PathVariable Long id,
+            @Valid @RequestBody HorarioRequestDTO horarioDto,
+            @AuthenticationPrincipal UserPrincipal user) {
+        Long empleadoId = user.getId();
+        HorarioDTO horarioActulizado = horarioService.editarHorarioEmpleado(horarioDto, id, empleadoId);
         return ResponseEntity.status(HttpStatus.OK).body(horarioActulizado);
     }
-    
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarHorarioEmpleado(@PathVariable Long id , @AuthenticationPrincipal UserPrincipal user){
-         Long empleadoId = user.getId();
-         horarioService.eliminarHorarioEmpleado(id, empleadoId);
-          return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    public ResponseEntity<Void> eliminarHorarioEmpleado(@PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal user) {
+        Long empleadoId = user.getId();
+        horarioService.eliminarHorarioEmpleado(id, empleadoId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
-

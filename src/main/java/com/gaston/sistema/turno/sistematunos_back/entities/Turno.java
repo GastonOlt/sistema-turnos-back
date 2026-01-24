@@ -17,21 +17,26 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "turno")
 public class Turno {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     @JsonIgnore
     private Cliente cliente;
-    
+
     @ManyToOne
     @JoinColumn(name = "empleado_id")
     @JsonIgnore
     private Empleado empleado;
-    
+
+    @ManyToOne
+    @JoinColumn(name = "dueno_id")
+    @JsonIgnore
+    private Dueno dueno;
+
     @ManyToOne
     @JoinColumn(name = "servicio_id")
     @JsonIgnore
@@ -41,15 +46,15 @@ public class Turno {
     @JoinColumn(name = "local_id")
     @JsonIgnore
     private Local local;
-    
+
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private LocalDateTime fechaHoraInicioReal;
     private LocalDateTime fechaHoraFinReal;
-    
+
     @Enumerated(EnumType.STRING)
     private EstadoTurno estado;
-    
+
     private boolean adelantado = false;
 
     public Long getId() {
@@ -74,6 +79,14 @@ public class Turno {
 
     public void setEmpleado(Empleado empleado) {
         this.empleado = empleado;
+    }
+
+    public Dueno getDueno() {
+        return dueno;
+    }
+
+    public void setDueno(Dueno dueno) {
+        this.dueno = dueno;
     }
 
     public ServicioLocal getServicio() {
@@ -139,7 +152,5 @@ public class Turno {
     public void setLocal(Local local) {
         this.local = local;
     }
-    
-    
+
 }
- 

@@ -29,12 +29,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
 @RestController
 @RequestMapping("/cliente/turnos")
 @Tag(name = "Turnos - Cliente", description = "Operaciones de reserva y consulta para clientes")
 public class TurnoClienteController {
-
 
     private final TurnoService turnoService;
     private final ClienteService clienteService;
@@ -46,23 +44,27 @@ public class TurnoClienteController {
 
     @Operation(summary = "Reservar un turno", description = "Registra un turno si el slot está disponible. Requiere rol CLIENTE.")
     @PostMapping
-    public ResponseEntity<TurnoResponseDTO> reservarTurno(@RequestBody TurnoRequestDTO request, @AuthenticationPrincipal UserPrincipal user) {
-       Long clienteId = user.getId();
-       TurnoResponseDTO turno = turnoService.reservarTurno(clienteId, request);
-       return ResponseEntity.status(HttpStatus.CREATED).body(turno);
+    public ResponseEntity<TurnoResponseDTO> reservarTurno(@RequestBody TurnoRequestDTO request,
+            @AuthenticationPrincipal UserPrincipal user) {
+        Long clienteId = user.getId();
+        TurnoResponseDTO turno = turnoService.reservarTurno(clienteId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(turno);
     }
 
     @Operation(summary = "Consultar disponibilidad", description = "Devuelve los rangos horarios libres para un servicio y fecha específicos.")
     @GetMapping("/disponibilidad")
     @SecurityRequirements()
-    public ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@RequestParam Long localId,@RequestParam Long empleadoId, @RequestParam Long servicioId,
-                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+    public ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@RequestParam Long localId,
+            @RequestParam(required = false) Long empleadoId,
+            @RequestParam(required = false) Long duenoId,
+            @RequestParam Long servicioId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
 
-        List<SlotDisponibleDTO> slots = turnoService.obtenerSlotsDisponibles(localId, empleadoId, servicioId, fecha);
+        List<SlotDisponibleDTO> slots = turnoService.obtenerSlotsDisponibles(localId, empleadoId, duenoId, servicioId,
+                fecha);
         return ResponseEntity.status(HttpStatus.OK).body(slots);
     }
-    
-    
+
     @GetMapping("/activos")
     public ResponseEntity<List<TurnoClienteDTO>> obtenerTurnosActivos(@AuthenticationPrincipal UserPrincipal user) {
         Long clienteId = user.getId();
@@ -78,9 +80,9 @@ public class TurnoClienteController {
     }
 
     @PatchMapping("/{turnoId}/cancelar")
-        public ResponseEntity<Void> cancelarTurno(@AuthenticationPrincipal UserPrincipal user,@PathVariable Long turnoId) {
+    public ResponseEntity<Void> cancelarTurno(@AuthenticationPrincipal UserPrincipal user, @PathVariable Long turnoId) {
         Long clienteId = user.getId();
-        clienteService.cancelarTurno(clienteId,turnoId);
+        clienteService.cancelarTurno(clienteId, turnoId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -40,6 +40,12 @@ Está construido siguiendo buenas prácticas de desarrollo , con arquitectura en
 - 🔐 **Autenticación y autorización con JWT**  
   Implementación de seguridad con **Spring Security** y **JSON Web Tokens**, asegurando que solo los usuarios autenticados accedan a los endpoints protegidos.
 
+- 👑 **Dueño como Prestador de Servicios**
+  Los dueños pueden gestionar sus propios turnos y atender clientes directamente, utilizando la infraestructura de horarios del local.
+
+- 🚀 **Onboarding Inteligente de Empleados**
+  Al registrar un nuevo empleado, este hereda automáticamente los horarios generales de atención del local, facilitando la configuración inicial.
+
 - 🧭 **Arquitectura REST**  
   Endpoints organizados de forma clara y estándar para facilitar la comunicación con el frontend.
 

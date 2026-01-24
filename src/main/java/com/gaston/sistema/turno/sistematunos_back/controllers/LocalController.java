@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.LocalDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.LocalRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Local;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.LocalService;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,11 +20,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
 @RestController
 @RequestMapping("/dueno/local")
 public class LocalController {
-    
+
     private final LocalService localService;
 
     public LocalController(LocalService localService) {
@@ -32,29 +31,33 @@ public class LocalController {
     }
 
     @PostMapping
-    public ResponseEntity<LocalDTO> crearLocal(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody Local local) {
+    public ResponseEntity<LocalDTO> crearLocal(@AuthenticationPrincipal UserPrincipal user,
+            @Valid @RequestBody LocalRequestDTO localDto) {
         Long duenoId = user.getId();
-        LocalDTO localNuevo = localService.crearLocal(local,duenoId);
+        LocalDTO localNuevo = localService.crearLocal(localDto, duenoId);
         return ResponseEntity.status(HttpStatus.CREATED).body(localNuevo);
     }
 
     @GetMapping
-    public ResponseEntity<?> obtenerPorDueno(@AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<Local> obtenerPorDueno(@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
         Local local = localService.obtenerPorDueno(duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(local);
     }
-    
+
     @PutMapping
-    public ResponseEntity<LocalDTO> editarLocal(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody Local local) {
+    public ResponseEntity<LocalDTO> editarLocal(@AuthenticationPrincipal UserPrincipal user,
+            @Valid @RequestBody LocalRequestDTO localDto) {
         Long duenoId = user.getId();
-        LocalDTO localEdit = localService.editarLocal(local, duenoId);
+        LocalDTO localEdit = localService.editarLocal(localDto, duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(localEdit);
     }
-    
+
     @GetMapping("{id}")
-    public ResponseEntity<Local> obtenerLocalPorId(@PathVariable Long id) {
-            Local localDb = localService.obtenerLocalPorId(id);
-            return ResponseEntity.status(HttpStatus.OK).body(localDb);
+    public ResponseEntity<Local> obtenerLocalPorId(@AuthenticationPrincipal UserPrincipal user, @PathVariable Long id) {
+        Long duenoId = user.getId();
+        // Secure call passing duenoId
+        Local localDb = localService.obtenerLocalPorId(id, duenoId);
+        return ResponseEntity.status(HttpStatus.OK).body(localDb);
     }
 }

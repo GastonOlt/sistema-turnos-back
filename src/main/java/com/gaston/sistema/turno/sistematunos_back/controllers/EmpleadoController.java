@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.EmpleadoDto;
+import com.gaston.sistema.turno.sistematunos_back.dto.EmpleadoRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Empleado;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.EmpleadoService;
@@ -24,8 +25,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 
-
-
 //manjejo de empleados por parte del dueno del local
 @RestController
 @RequestMapping("/dueno/empleados")
@@ -37,32 +36,33 @@ public class EmpleadoController {
         this.empleadoService = empleadoService;
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<EmpleadoDto> crearEmpleado(@Valid @RequestPart("empleado") Empleado empleado, 
-                        @AuthenticationPrincipal UserPrincipal user ,
-                        @RequestPart("imagen")  MultipartFile archivo) {
+    @PostMapping(consumes = { "multipart/form-data" })
+    public ResponseEntity<EmpleadoDto> crearEmpleado(@Valid @RequestPart("empleado") EmpleadoRequestDTO empleadoDto,
+            @AuthenticationPrincipal UserPrincipal user,
+            @RequestPart("imagen") MultipartFile archivo) {
         Long duenoId = user.getId();
-        EmpleadoDto empleadoNuevo = empleadoService.crearEmpleado(empleado, duenoId,archivo);
+        EmpleadoDto empleadoNuevo = empleadoService.crearEmpleado(empleadoDto, duenoId, archivo);
         return ResponseEntity.status(HttpStatus.CREATED).body(empleadoNuevo);
     }
-    
+
     @DeleteMapping("/{empleadoId}")
-    public ResponseEntity<Void> eliminarEmpleado(@PathVariable Long empleadoId, @AuthenticationPrincipal UserPrincipal user){
+    public ResponseEntity<Void> eliminarEmpleado(@PathVariable Long empleadoId,
+            @AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
-        empleadoService.eliminarEmpleado(empleadoId,duenoId);
+        empleadoService.eliminarEmpleado(empleadoId, duenoId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-    
-    @PutMapping(value = "/{empleadoId}", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> editarEmppleado(@RequestPart("empleado") Empleado empleado,
-                        @RequestPart("imagen") MultipartFile archivo,
-                        @PathVariable Long empleadoId,
-                        @AuthenticationPrincipal UserPrincipal user) {
+
+    @PutMapping(value = "/{empleadoId}", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> editarEmppleado(@RequestPart("empleado") EmpleadoRequestDTO empleadoDto,
+            @RequestPart("imagen") MultipartFile archivo,
+            @PathVariable Long empleadoId,
+            @AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
-        EmpleadoDto empleadoEditado = empleadoService.editarEmpleado(empleado, archivo,empleadoId,duenoId);
+        EmpleadoDto empleadoEditado = empleadoService.editarEmpleado(empleadoDto, archivo, empleadoId, duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(empleadoEditado);
     }
-    
+
     @GetMapping
     public ResponseEntity<List<EmpleadoDto>> obtenerEmpleados(@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
@@ -71,9 +71,10 @@ public class EmpleadoController {
     }
 
     @GetMapping("/{empleadoId}")
-    public ResponseEntity<EmpleadoDto> obtenerEmpleado(@PathVariable Long empleadoId, @AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<EmpleadoDto> obtenerEmpleado(@PathVariable Long empleadoId,
+            @AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
-        EmpleadoDto empleados = empleadoService.obtenerEmpleado(empleadoId,duenoId);
+        EmpleadoDto empleados = empleadoService.obtenerEmpleado(empleadoId, duenoId);
         return ResponseEntity.status(HttpStatus.OK).body(empleados);
     }
 }

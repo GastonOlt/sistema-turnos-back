@@ -1,17 +1,11 @@
 package com.gaston.sistema.turno.sistematunos_back.services;
 
-import java.util.Map;
-
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.AuthTokenDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.LoginRequest;
+import com.gaston.sistema.turno.sistematunos_back.dto.RegistroClienteDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.RegistroDuenoDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.UsuarioDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Cliente;
 import com.gaston.sistema.turno.sistematunos_back.entities.Dueno;
@@ -21,6 +15,13 @@ import com.gaston.sistema.turno.sistematunos_back.security.JwtTokenProvider;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.validation.CredencialesInvalidasException;
 import com.gaston.sistema.turno.sistematunos_back.validation.EmailExistenteException;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.validation.Valid;
 
@@ -35,7 +36,8 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
     public AuthService(ClienteService clienteService, DuenoService duenoService, PasswordEncoder passwordEncoder,
-            JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService) {
+            JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager,
+            RefreshTokenService refreshTokenService) {
         this.clienteService = clienteService;
         this.duenoService = duenoService;
         this.passwordEncoder = passwordEncoder;
@@ -44,93 +46,73 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
     }
 
-
     @Transactional
-    public UsuarioDTO registrarCliente(Cliente cliente){
-        if(clienteService.findByEmail(cliente.getEmail()).isPresent()){
-            throw new EmailExistenteException("Email ya registrado");     
+    public UsuarioDTO registrarCliente(RegistroClienteDTO clienteDto) {
+        Cliente cliente = new Cliente();
+        cliente.setNombre(clienteDto.getNombre());
+        cliente.setApellido(clienteDto.getApellido());
+        cliente.setEmail(clienteDto.getEmail());
+        cliente.setPassword(clienteDto.getPassword());
+
+        if (clienteService.findByEmail(cliente.getEmail()).isPresent()) {
+            throw new EmailExistenteException("Email ya registrado");
         }
         cliente.setPassword(passwordEncoder.encode(cliente.getPassword()));
         cliente.setRol("CLIENTE");
         Cliente nuevoCLiente = clienteService.crearCliente(cliente);
-        
+
         return clienteDTO(nuevoCLiente);
     }
-    
-    
+
     @Transactional
-    public UsuarioDTO registrarDueno(Dueno dueno){
-        if(duenoService.findByEmail(dueno.getEmail()).isPresent()){
-            throw new EmailExistenteException("Email ya registrado");     
+    public UsuarioDTO registrarDueno(RegistroDuenoDTO duenoDto) {
+        Dueno dueno = new Dueno();
+        dueno.setNombre(duenoDto.getNombre());
+        dueno.setApellido(duenoDto.getApellido());
+        dueno.setEmail(duenoDto.getEmail());
+        dueno.setPassword(duenoDto.getPassword());
+
+        if (duenoService.findByEmail(dueno.getEmail()).isPresent()) {
+            throw new EmailExistenteException("Email ya registrado");
         }
         dueno.setPassword(passwordEncoder.encode(dueno.getPassword()));
         dueno.setRol("DUENO");
-        Dueno nuevDueno = duenoService.crearDueno(dueno);  
+        Dueno nuevDueno = duenoService.crearDueno(dueno);
         return duenoDTO(nuevDueno);
     }
-    
+
     @Transactional
-    public Map<String, ResponseCookie> Login(@Valid LoginRequest req){
+    public AuthTokenDTO Login(@Valid LoginRequest req) {
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(),req.getPassword()));
+            Authentication authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
 
             UserPrincipal usuario = (UserPrincipal) authentication.getPrincipal();
             String jwt = jwtTokenProvider.generateToken(authentication);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(usuario.getId());
 
-            ResponseCookie jwtCookie = ResponseCookie.from("accessToken", jwt)
-                    .httpOnly(true)
-                    .secure(false) 
-                    .path("/")
-                    .maxAge(900)
-                    .sameSite("Lax")
-                    .build();
-            
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken",refreshToken.getToken())
-                    .httpOnly(true)
-                    .secure(false) 
-                    .path("/autenticacion/refresh")
-                    .maxAge(refreshTokenService.getDurationInSeconds())
-                    .sameSite("Lax")
-                    .build();
-    
-            return Map.of("jwt", jwtCookie, "refreshToken", refreshCookie);
+            return new AuthTokenDTO(jwt, refreshToken.getToken(), refreshTokenService.getDurationInSeconds());
 
         } catch (AuthenticationException e) {
-             throw new CredencialesInvalidasException("error en las credenciales");
+            throw new CredencialesInvalidasException("error en las credenciales");
         }
     }
 
     @Transactional
-   public Map<String, ResponseCookie> refrescarSesionConCookies(String refreshTokenValue) {
-    return refreshTokenService.findByToken(refreshTokenValue)
-            .map(refreshTokenService::verifyExpiration)
-            .map(tokenEntidad -> {
-                Usuario usuario = tokenEntidad.getUsuario();
-                String nuevoJwt = jwtTokenProvider.generateTokenDesdeUsuario(usuario);
+    public AuthTokenDTO refrescarSesionConCookies(String refreshTokenValue) {
+        return refreshTokenService.findByToken(refreshTokenValue)
+                .map(refreshTokenService::verifyExpiration)
+                .map(tokenEntidad -> {
+                    Usuario usuario = tokenEntidad.getUsuario();
+                    String nuevoJwt = jwtTokenProvider.generateTokenDesdeUsuario(usuario);
 
-                ResponseCookie jwtCookie = ResponseCookie.from("accessToken", nuevoJwt)
-                        .httpOnly(true)
-                        .secure(false) 
-                        .path("/")
-                        .maxAge(900) 
-                        .sameSite("Lax")
-                        .build();
-                        
-                ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokenEntidad.getToken())
-                        .httpOnly(true)
-                        .secure(false)
-                        .path("/autenticacion/refresh")
-                        .maxAge(refreshTokenService.getDurationInSeconds())
-                        .sameSite("Lax")
-                        .build();
-
-                return Map.of("jwt", jwtCookie, "refresh", refreshCookie);
-            })
-            .orElseThrow(() -> new IllegalArgumentException("Refresh Token inválido o inexistente"));
+                    return new AuthTokenDTO(nuevoJwt, tokenEntidad.getToken(),
+                            refreshTokenService.getDurationInSeconds());
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Refresh Token inválido o inexistente"));
     }
 
-    public UsuarioDTO clienteDTO(Cliente cliente){
+    public UsuarioDTO clienteDTO(Cliente cliente) {
         UsuarioDTO dto = new UsuarioDTO();
         dto.setId(cliente.getId());
         dto.setNombre(cliente.getNombre());
@@ -140,8 +122,8 @@ public class AuthService {
 
         return dto;
     }
-    
-    public UsuarioDTO duenoDTO(Dueno dueno){
+
+    public UsuarioDTO duenoDTO(Dueno dueno) {
         UsuarioDTO dto = new UsuarioDTO();
         dto.setId(dueno.getId());
         dto.setNombre(dueno.getNombre());

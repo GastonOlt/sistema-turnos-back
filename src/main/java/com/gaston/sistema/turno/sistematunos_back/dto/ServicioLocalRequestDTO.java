@@ -1,30 +1,22 @@
 package com.gaston.sistema.turno.sistematunos_back.dto;
 
-public class ServicioLocalDTO {
-    private Long id;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public class ServicioLocalRequestDTO {
+
+    @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
+
+    @NotBlank(message = "La descripción es obligatoria")
     private String descripcion;
+
+    @Min(value = 1, message = "El tiempo debe ser mayor a 0")
     private int tiempo;
+
+    @Min(value = 0, message = "El precio no puede ser negativo")
     private int precio;
-
-    public ServicioLocalDTO() {
-    }
-
-    public ServicioLocalDTO(com.gaston.sistema.turno.sistematunos_back.entities.ServicioLocal entity) {
-        this.id = entity.getId();
-        this.nombre = entity.getNombre();
-        this.descripcion = entity.getDescripcion();
-        this.tiempo = entity.getTiempo();
-        this.precio = entity.getPrecio();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getNombre() {
         return nombre;

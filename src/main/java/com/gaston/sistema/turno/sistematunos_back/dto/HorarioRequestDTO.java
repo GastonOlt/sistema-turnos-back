@@ -2,31 +2,21 @@ package com.gaston.sistema.turno.sistematunos_back.dto;
 
 import java.time.LocalTime;
 
-public class HorarioDTO {
-    private Long id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public class HorarioRequestDTO {
+
+    @NotBlank(message = "El día de la semana es obligatorio")
     private String diaSemana;
+
+    @NotNull(message = "El horario de apertura es obligatorio")
     private LocalTime horarioApertura;
+
+    @NotNull(message = "El horario de cierre es obligatorio")
     private LocalTime horarioCierre;
+
     private boolean activo;
-
-    public HorarioDTO() {
-    }
-
-    public HorarioDTO(com.gaston.sistema.turno.sistematunos_back.entities.Horario entity) {
-        this.id = entity.getId();
-        this.diaSemana = entity.getDiaSemana();
-        this.horarioApertura = entity.getHorarioApertura();
-        this.horarioCierre = entity.getHorarioCierre();
-        this.activo = entity.isActivo();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getDiaSemana() {
         return diaSemana;

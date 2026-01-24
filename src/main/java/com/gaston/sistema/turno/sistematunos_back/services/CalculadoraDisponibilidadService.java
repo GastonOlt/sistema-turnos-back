@@ -18,6 +18,7 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Empleado;
 import com.gaston.sistema.turno.sistematunos_back.entities.Horario;
 import com.gaston.sistema.turno.sistematunos_back.entities.ServicioLocal;
 import com.gaston.sistema.turno.sistematunos_back.entities.Turno;
+import com.gaston.sistema.turno.sistematunos_back.entities.Dueno;
 import com.gaston.sistema.turno.sistematunos_back.repositories.TurnoRepository;
 
 @Service
@@ -27,6 +28,34 @@ public class CalculadoraDisponibilidadService {
 
     public CalculadoraDisponibilidadService(TurnoRepository turnoRepository) {
         this.turnoRepository = turnoRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<SlotDisponibleDTO> calcularSlotsDueno(Dueno dueno, ServicioLocal servicio, LocalDate fecha) {
+        Locale espaniol = Locale.of("es", "ES");
+        String diaSemana = fecha.getDayOfWeek().getDisplayName(TextStyle.FULL, espaniol);
+        String diaSemanaCapitalized = Character.toUpperCase(diaSemana.charAt(0)) + diaSemana.substring(1).toLowerCase();
+
+        // Para el dueno, usamos los horarios del local donde NO hay empleado asignado
+        // (horarios generales)
+        // O asumimos que si el horario esta en la lista del local y cumple condicion,
+        // es valido.
+        // El local tiene una lista de horarios.
+        List<Horario> rangos = dueno.getLocal().getHorarios().stream()
+                .filter(h -> h.getEmpleado() == null) // Solo horarios del local (sin empleado especifico)
+                .filter(h -> h.getDiaSemana().equalsIgnoreCase(diaSemanaCapitalized) && h.isActivo())
+                .sorted(Comparator.comparing(Horario::getHorarioApertura))
+                .collect(Collectors.toList());
+
+        if (rangos.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        LocalDateTime inicioDia = fecha.atStartOfDay();
+        LocalDateTime finDia = fecha.atTime(23, 59, 59);
+        List<Turno> turnosDelDia = turnoRepository.findTurnosActivosPorFechaDueno(dueno.getId(), inicioDia, finDia);
+
+        return generarSlots(rangos, turnosDelDia, servicio, fecha);
     }
 
     @Transactional(readOnly = true)
@@ -48,8 +77,13 @@ public class CalculadoraDisponibilidadService {
         LocalDateTime finDia = fecha.atTime(23, 59, 59);
         List<Turno> turnosDelDia = turnoRepository.findTurnosActivosPorFecha(empleado.getId(), inicioDia, finDia);
 
+        return generarSlots(rangos, turnosDelDia, servicio, fecha);
+    }
+
+    private List<SlotDisponibleDTO> generarSlots(List<Horario> rangos, List<Turno> turnosDelDia, ServicioLocal servicio,
+            LocalDate fecha) {
         int duracionMin = servicio.getTiempo();
-        int intervaloMin = 15; 
+        int intervaloMin = 15;
 
         List<SlotDisponibleDTO> slotDisponibles = new ArrayList<>();
 
@@ -67,7 +101,7 @@ public class CalculadoraDisponibilidadService {
                 }
 
                 boolean ocupado = verificarSolapamiento(turnosDelDia, slotInicial, slotFin);
-                
+
                 if (!ocupado) {
                     slotDisponibles.add(new SlotDisponibleDTO(slotInicial, slotFin));
                 }
@@ -82,7 +116,7 @@ public class CalculadoraDisponibilidadService {
         for (Turno turno : turnos) {
             // Lógica de colisión: (StartA < EndB) && (EndA > StartB)
             if (turno.getFechaHoraInicio().isBefore(slotFin) && turno.getFechaHoraFin().isAfter(slotInicio)) {
-                return true; 
+                return true;
             }
         }
         return false;

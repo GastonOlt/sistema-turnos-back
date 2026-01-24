@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gaston.sistema.turno.sistematunos_back.dto.SlotDisponibleDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.TurnoRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.TurnoResponseDTO;
-import com.gaston.sistema.turno.sistematunos_back.entities.ServicioLocal;
+import com.gaston.sistema.turno.sistematunos_back.dto.ServicioLocalDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.TurnoEmpleadoService;
 import com.gaston.sistema.turno.sistematunos_back.services.TurnoService;
@@ -40,7 +40,8 @@ public class AgendaEmpleadoController {
 
     @Operation(summary = "Crear un turno como empleado", description = "Registra un turno para el empleado autenticado si el slot está disponible.")
     @PostMapping
-    public ResponseEntity<TurnoResponseDTO> crearTurnoEmpleado(@AuthenticationPrincipal UserPrincipal user ,@RequestBody TurnoRequestDTO request) {
+    public ResponseEntity<TurnoResponseDTO> crearTurnoEmpleado(@AuthenticationPrincipal UserPrincipal user,
+            @RequestBody TurnoRequestDTO request) {
         Long empleadoId = user.getId();
         TurnoResponseDTO nuevoTurno = turnoService.crearTurnoEmpleado(empleadoId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTurno);
@@ -48,18 +49,19 @@ public class AgendaEmpleadoController {
 
     @Operation(summary = "Consultar disponibilidad", description = "Devuelve los rangos horarios libres para un servicio y fecha específicos.")
     @GetMapping("/disponibilidad")
-    public  ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@AuthenticationPrincipal UserPrincipal user, @RequestParam Long servicioId,
-                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+    public ResponseEntity<List<SlotDisponibleDTO>> obtenerSlotsDisponibles(@AuthenticationPrincipal UserPrincipal user,
+            @RequestParam Long servicioId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
         Long empleadoId = user.getId();
         List<SlotDisponibleDTO> slotsDisponibles = turnoService.obtenerSlotsDisponibles(empleadoId, servicioId, fecha);
         return ResponseEntity.status(HttpStatus.OK).body(slotsDisponibles);
     }
 
     @GetMapping("/mis-servicios")
-    public ResponseEntity<List<ServicioLocal>> obtenerMisServicios(@AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<List<ServicioLocalDTO>> obtenerMisServicios(@AuthenticationPrincipal UserPrincipal user) {
         Long empleadoId = user.getId();
-        List<ServicioLocal> servicios = turnoEmpleadoService.obtenerServiciosPorEmpleado(empleadoId);
+        List<ServicioLocalDTO> servicios = turnoEmpleadoService.obtenerServiciosPorEmpleado(empleadoId);
         return ResponseEntity.status(HttpStatus.OK).body(servicios);
     }
-    
+
 }

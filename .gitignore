@@ -37,3 +37,5 @@ src/main/resources/application.properties
 doc.txt
 
 info.txt
+
+REFACTOR_REPORT.md

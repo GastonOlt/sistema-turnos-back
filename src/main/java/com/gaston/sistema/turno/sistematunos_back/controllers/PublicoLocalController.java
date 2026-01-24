@@ -21,8 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-
-
 @RestController
 @RequestMapping("/publico/locales")
 public class PublicoLocalController {
@@ -37,28 +35,28 @@ public class PublicoLocalController {
 
     @GetMapping("{id}")
     @SecurityRequirements()
-    public ResponseEntity<Local> obtenerLocalPorId(@PathVariable Long id) {
-            Local localDb = localService.obtenerLocalPorId(id);
-            return ResponseEntity.status(HttpStatus.OK).body(localDb);
+    public ResponseEntity<LocalDTO> obtenerLocalPorId(@PathVariable Long id) {
+        LocalDTO localDb = localService.obtenerLocalPublicoPorId(id);
+        return ResponseEntity.status(HttpStatus.OK).body(localDb);
     }
-    
+
     @GetMapping
     @SecurityRequirements()
     public ResponseEntity<Page<LocalDTO>> obtenerLocalesDisponiblesPorTipoOProvinciaONombre(
-                                                      @RequestParam(required = false) String tipoLocal ,
-                                                      @RequestParam(required = false) String provincia,
-                                                      @RequestParam(required = false) String nombre,
-                                                      @PageableDefault(page = 0, size = 10)Pageable pageable) {
+            @RequestParam(required = false) String tipoLocal,
+            @RequestParam(required = false) String provincia,
+            @RequestParam(required = false) String nombre,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
 
-       Page<LocalDTO> locales = localService.obtenerLocales(tipoLocal, provincia, nombre, pageable);
-       return ResponseEntity.status(HttpStatus.OK).body(locales);
+        Page<LocalDTO> locales = localService.obtenerLocales(tipoLocal, provincia, nombre, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(locales);
     }
-    
+
     @GetMapping("/imagenes/{id}")
     @SecurityRequirements()
     public ResponseEntity<byte[]> descargarImagen(@PathVariable Long id) {
         ImagenLocal imagen = imagenLocalService.findById(id);
-            
+
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.valueOf(imagen.getTipoArchivo()))
                 .body(imagen.getDatosImagen());

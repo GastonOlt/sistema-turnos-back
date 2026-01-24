@@ -15,36 +15,59 @@ import com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno;
 public interface TurnoRepository extends JpaRepository<Turno, Long> {
 
        boolean existsByClienteIdAndEstado(Long clienteId, EstadoTurno estado);
+
        boolean existsByClienteIdAndEstadoIn(Long clienteId, List<EstadoTurno> estado);
+
        List<Turno> findByEmpleadoIdAndEstadoIn(Long empleadoId, List<EstadoTurno> estados);
+
        List<Turno> findByEmpleadoIdAndEstado(Long empleadoId, EstadoTurno estado);
 
-       // para enecontrar todos los turnos que esten confirmados antes de la fecha actual
+       // para enecontrar todos los turnos que esten confirmados antes de la fecha
+       // actual
        List<Turno> findAllByEstadoAndFechaHoraFinBefore(EstadoTurno estado, LocalDateTime fecha);
 
-       // para traer todos los turnos de un empleado con estado finalizados entre un periodo , para calcular ganancias
+       // para traer todos los turnos de un empleado con estado finalizados entre un
+       // periodo , para calcular ganancias
        List<Turno> findByEmpleadoIdAndEstadoAndFechaHoraInicioBetween(Long empleadoId, EstadoTurno estado,
                      LocalDateTime inicio, LocalDateTime fin);
 
-       // trear todos los turnos para enviar notificacion de recordatorio de turno por email
+       // trear todos los turnos para enviar notificacion de recordatorio de turno por
+       // email
        List<Turno> findByEstadoAndFechaHoraInicioBetween(EstadoTurno estado, LocalDateTime inicio, LocalDateTime fin);
 
        // para la calculadora de disponibilidad , traer los turnos que no esten
        // cancelados o finalizados en una fecha determinada
        @Query("SELECT t FROM Turno t WHERE t.empleado.id = :empleadoId " +
-                     "AND t.estado NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.FINALIZADO, com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.CANCELADO) " +
+                     "AND t.estado NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.FINALIZADO, com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.CANCELADO) "
+                     +
                      "AND t.fechaHoraInicio BETWEEN :inicio AND :fin")
        List<Turno> findTurnosActivosPorFecha(@Param("empleadoId") Long empleadoId,
                      @Param("inicio") LocalDateTime inicio,
                      @Param("fin") LocalDateTime fin);
 
+       @Query("SELECT t FROM Turno t WHERE t.dueno.id = :duenoId " +
+                     "AND t.estado NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.FINALIZADO, com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.CANCELADO) "
+                     +
+                     "AND t.fechaHoraInicio BETWEEN :inicio AND :fin")
+       List<Turno> findTurnosActivosPorFechaDueno(@Param("duenoId") Long duenoId,
+                     @Param("inicio") LocalDateTime inicio,
+                     @Param("fin") LocalDateTime fin);
+
        @Query("SELECT COUNT(t) > 0 FROM Turno t WHERE t.empleado.id = :empleadoId AND " +
-                     "t.estado NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.FINALIZADO, com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.CANCELADO) AND " +
+                     "t.estado NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.FINALIZADO, com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.CANCELADO) AND "
+                     +
                      "((t.fechaHoraInicio < :fin AND t.fechaHoraFin > :inicio))")
        boolean existsByEmpleadoAndHorarioSolapado(@Param("empleadoId") Long empleadoId,
                      @Param("inicio") LocalDateTime inicio,
                      @Param("fin") LocalDateTime fin);
 
+       @Query("SELECT COUNT(t) > 0 FROM Turno t WHERE t.dueno.id = :duenoId AND " +
+                     "t.estado NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.FINALIZADO, com.gaston.sistema.turno.sistematunos_back.entities.EstadoTurno.CANCELADO) AND "
+                     +
+                     "((t.fechaHoraInicio < :fin AND t.fechaHoraFin > :inicio))")
+       boolean existsByDuenoAndHorarioSolapado(@Param("duenoId") Long duenoId,
+                     @Param("inicio") LocalDateTime inicio,
+                     @Param("fin") LocalDateTime fin);
 
        // Para turnos Activos confirmados/pendientes
        @Query("SELECT t FROM Turno t WHERE t.cliente.id = :clienteId " +
