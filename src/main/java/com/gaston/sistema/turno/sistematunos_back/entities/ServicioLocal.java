@@ -1,6 +1,5 @@
 package com.gaston.sistema.turno.sistematunos_back.entities;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,14 +35,14 @@ public class ServicioLocal {
     @NotNull(message = "ingrese un valor")
     private int precio;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "local_id")
     @JsonIgnore
     private Local local;
-    
-    @OneToMany(mappedBy = "servicio",cascade = CascadeType.ALL,orphanRemoval = true)
+
+    @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Turno> turnos = new ArrayList<>();
-    
+
     public Long getId() {
         return id;
     }
@@ -99,5 +99,4 @@ public class ServicioLocal {
         this.turnos = turnos;
     }
 
-    
 }

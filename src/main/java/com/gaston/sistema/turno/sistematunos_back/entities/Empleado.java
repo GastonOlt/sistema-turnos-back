@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -17,22 +18,26 @@ import jakarta.persistence.Table;
 @Table(name = "empleado")
 public class Empleado extends Usuario {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "local_id")
     @JsonIgnore
     private Local local;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true )
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "imagen_id")
     private ImagenLocal imagenEmpleado;
 
     @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Horario> horarios = new ArrayList<>();
-    
+
     @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Turno> turnos = new ArrayList<>();
 
     private String especialidad;
+
+    private boolean isDueno = false;
+
+    private boolean activoParaTurnos = true;
 
     public Local getLocal() {
         return local;
@@ -74,7 +79,19 @@ public class Empleado extends Usuario {
         this.turnos = turno;
     }
 
+    public boolean isDueno() {
+        return isDueno;
+    }
 
+    public void setDueno(boolean isDueno) {
+        this.isDueno = isDueno;
+    }
 
-    
+    public boolean isActivoParaTurnos() {
+        return activoParaTurnos;
+    }
+
+    public void setActivoParaTurnos(boolean activoParaTurnos) {
+        this.activoParaTurnos = activoParaTurnos;
+    }
 }

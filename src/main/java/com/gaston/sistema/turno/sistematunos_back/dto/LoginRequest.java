@@ -1,5 +1,6 @@
 package com.gaston.sistema.turno.sistematunos_back.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,6 +14,9 @@ public class LoginRequest {
     @NotBlank(message = "ingrese un valor")
     @Size(min = 6)
     private String password;
+
+    @JsonProperty("g-recaptcha-response")
+    private String recaptchaResponse;
 
     public String getEmail() {
         return email;
@@ -29,5 +33,13 @@ public class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
+    public String getRecaptchaResponse() {
+        return recaptchaResponse;
+    }
+
+    public void setRecaptchaResponse(String recaptchaResponse) {
+        this.recaptchaResponse = recaptchaResponse;
+    }
+
 }

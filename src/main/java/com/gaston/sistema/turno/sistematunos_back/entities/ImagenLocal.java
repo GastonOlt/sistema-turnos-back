@@ -1,11 +1,10 @@
 package com.gaston.sistema.turno.sistematunos_back.entities;
 
-
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,7 +20,7 @@ public class ImagenLocal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "nombre_Archivo")
     private String nombreArchivo;
 
@@ -30,15 +29,14 @@ public class ImagenLocal {
 
     @Column(name = "datos_imagen", columnDefinition = "BYTEA")
     private byte[] datosImagen;
-    
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "local_id")
     @JsonIgnore
     private Local local;
-   
-    
-    @OneToOne(mappedBy = "imagenEmpleado")
+
+    @OneToOne(mappedBy = "imagenEmpleado", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Empleado empleado;
 
     public Long getId() {
@@ -81,5 +79,4 @@ public class ImagenLocal {
         this.local = local;
     }
 
-    
 }

@@ -1,6 +1,5 @@
 package com.gaston.sistema.turno.sistematunos_back.entities;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,15 +22,15 @@ public abstract class Usuario {
     private Long id;
 
     @NotBlank(message = "ingrese un valor ")
-    @Size(min = 4,max = 20)
+    @Size(min = 4, max = 20)
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$", message = "El nombre solo puede contener letras")
     private String nombre;
-    
+
     @NotBlank(message = "ingrese un valor ")
-    @Size(min = 4,max = 20)
+    @Size(min = 4, max = 20)
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$", message = "El nombre solo puede contener letras")
     private String apellido;
-    
+
     @Email(message = "email incorrecto")
     @NotBlank(message = "ingrese un valor ")
     private String email;
@@ -41,7 +40,6 @@ public abstract class Usuario {
     private String password;
 
     private String rol;
-
 
     public Long getId() {
         return id;
@@ -82,7 +80,7 @@ public abstract class Usuario {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
     public String getRol() {
         return rol;
     }
@@ -90,6 +88,5 @@ public abstract class Usuario {
     public void setRol(String rol) {
         this.rol = rol;
     }
-    
-    
+
 }

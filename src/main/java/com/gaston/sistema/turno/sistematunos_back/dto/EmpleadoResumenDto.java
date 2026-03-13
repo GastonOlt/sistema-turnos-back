@@ -1,16 +1,20 @@
 package com.gaston.sistema.turno.sistematunos_back.dto;
 
-public class EmpleadoDto {
+/**
+ * DTO plano para empleados en vista de detalle.
+ * PROHIBIDA referencia bidireccional a Local o ImagenLocal entity.
+ */
+public class EmpleadoResumenDto {
     private Long id;
     private String nombre;
     private String apellido;
     private String email;
-    private String rol;
     private String especialidad;
-    private String datosImagen;
-    private String tipoContenido;
     private boolean isDueno;
-    private boolean activoParaTurnos;
+    private ImagenDto imagenEmpleado; // DTO plano, no entidad
+
+    public EmpleadoResumenDto() {
+    }
 
     public Long getId() {
         return id;
@@ -44,30 +48,6 @@ public class EmpleadoDto {
         this.email = email;
     }
 
-    public String getRol() {
-        return rol;
-    }
-
-    public void setRol(String rol) {
-        this.rol = rol;
-    }
-
-    public String getDatosImagen() {
-        return datosImagen;
-    }
-
-    public void setDatosImagen(String datosImagen) {
-        this.datosImagen = datosImagen;
-    }
-
-    public String getTipoContenido() {
-        return tipoContenido;
-    }
-
-    public void setTipoContenido(String tipoContenido) {
-        this.tipoContenido = tipoContenido;
-    }
-
     public String getEspecialidad() {
         return especialidad;
     }
@@ -80,15 +60,15 @@ public class EmpleadoDto {
         return isDueno;
     }
 
-    public void setDueno(boolean isDueno) {
-        this.isDueno = isDueno;
+    public void setDueno(boolean dueno) {
+        isDueno = dueno;
     }
 
-    public boolean isActivoParaTurnos() {
-        return activoParaTurnos;
+    public ImagenDto getImagenEmpleado() {
+        return imagenEmpleado;
     }
 
-    public void setActivoParaTurnos(boolean activoParaTurnos) {
-        this.activoParaTurnos = activoParaTurnos;
+    public void setImagenEmpleado(ImagenDto imagenEmpleado) {
+        this.imagenEmpleado = imagenEmpleado;
     }
 }

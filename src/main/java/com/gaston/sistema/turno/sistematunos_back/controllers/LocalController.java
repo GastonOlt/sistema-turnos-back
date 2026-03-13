@@ -21,38 +21,38 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
 @RestController
 @RequestMapping("/dueno/local")
 public class LocalController {
-    
+
     @Autowired
     private LocalService localService;
 
     @PostMapping("/crear")
     public ResponseEntity<?> crearLocal(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody Local local) {
         Long duenoId = user.getId();
-        Map<String,Object> localNuevo = localService.crearLocal(local,duenoId);
+        Map<String, Object> localNuevo = localService.crearLocal(local, duenoId);
         return ResponseEntity.status(HttpStatus.CREATED).body(localNuevo);
     }
 
     @GetMapping("/obtener")
     public ResponseEntity<?> obtenerPorDueno(@AuthenticationPrincipal UserPrincipal user) {
         Long duenoId = user.getId();
-        Local local = localService.obtenerPorDueno(duenoId);
-        return ResponseEntity.status(HttpStatus.FOUND).body(local);
+        var localDto = localService.obtenerPorDueno(duenoId);
+        return ResponseEntity.status(HttpStatus.FOUND).body(localDto);
     }
-    
+
     @PutMapping("/editar")
     public ResponseEntity<?> editarLocal(@AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody Local local) {
         Long duenoId = user.getId();
         Local localEdit = localService.editarLocal(local, duenoId);
-        return ResponseEntity.status(HttpStatus.OK).body(localEdit);
+          var localDto = localService.obtenerPorDueno(duenoId);
+        return ResponseEntity.status(HttpStatus.OK).body(localDto);
     }
-    
+
     @GetMapping("{id}")
     public ResponseEntity<?> obtenerLocalPorId(@PathVariable Long id) {
-            Local localDb = localService.obtenerLocalPorId(id);
-            return ResponseEntity.ok(localDb);
+        Local localDb = localService.obtenerLocalEntidadPorId(id);
+        return ResponseEntity.ok(localDb);
     }
 }

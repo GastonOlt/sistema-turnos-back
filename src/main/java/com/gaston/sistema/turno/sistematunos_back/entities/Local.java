@@ -5,6 +5,7 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,7 +27,7 @@ public class Local {
 
     @NotBlank(message = "ingrese un valor ")
     private String descripcion;
-    
+
     @NotBlank(message = "ingrese un valor ")
     private String direccion;
     @NotBlank(message = "ingrese un valor ")
@@ -39,7 +40,7 @@ public class Local {
     private Double latitud;
     private Double longitud;
 
-    @OneToOne(mappedBy = "local")
+    @OneToOne(mappedBy = "local", fetch = FetchType.LAZY)
     private Dueno dueno;
 
     @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -48,26 +49,34 @@ public class Local {
     @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Horario> horarios = new ArrayList<>();
 
-    @OneToMany(mappedBy = "local", cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Empleado> empleados = new ArrayList<>();
 
-    @OneToMany(mappedBy = "local",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServicioLocal> servicios = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "local",cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Turno> turnos = new ArrayList<>();
 
-    public void actualizarDatosLocal(Local local){
-        if(local.nombre != null) this.nombre = local.getNombre();
-        if(local.descripcion != null) this.descripcion = local.getDescripcion();
-        if(local.direccion != null) this.direccion = local.getDireccion();
-        if(local.provincia != null) this.provincia = local.getProvincia();
-        if(local.telefono != null) this.telefono = local.getTelefono();
-        if(local.tipoLocal != null) this.tipoLocal = local.getTipoLocal();
-        if(local.latitud != null) this.latitud = local.getLatitud();
-        if(local.longitud != null) this.longitud = local.getLongitud();
+    public void actualizarDatosLocal(Local local) {
+        if (local.nombre != null)
+            this.nombre = local.getNombre();
+        if (local.descripcion != null)
+            this.descripcion = local.getDescripcion();
+        if (local.direccion != null)
+            this.direccion = local.getDireccion();
+        if (local.provincia != null)
+            this.provincia = local.getProvincia();
+        if (local.telefono != null)
+            this.telefono = local.getTelefono();
+        if (local.tipoLocal != null)
+            this.tipoLocal = local.getTipoLocal();
+        if (local.latitud != null)
+            this.latitud = local.getLatitud();
+        if (local.longitud != null)
+            this.longitud = local.getLongitud();
     }
- 
+
     public Long getId() {
         return id;
     }
@@ -188,6 +197,4 @@ public class Local {
         this.turnos = turnos;
     }
 
-    
-    
 }

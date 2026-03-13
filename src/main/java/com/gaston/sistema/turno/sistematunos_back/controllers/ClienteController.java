@@ -3,6 +3,7 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.CambioPasswordDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.ClienteDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.TurnoClienteDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
 ///CRUD de entidad cliente y info de turnos 
 @RestController
 @RequestMapping("/cliente")
@@ -28,7 +28,7 @@ public class ClienteController {
 
     @Autowired
     private ClienteService clienteService;
-    
+
     @GetMapping("/obtener")
     public ResponseEntity<?> obtenerCliente(@AuthenticationPrincipal UserPrincipal user) {
         Long clienteId = user.getId();
@@ -37,19 +37,19 @@ public class ClienteController {
     }
 
     @PutMapping("/editar")
-    public ResponseEntity<?> editarCliente(@AuthenticationPrincipal UserPrincipal user, @RequestBody ClienteDTO cliente) {
+    public ResponseEntity<?> editarCliente(@AuthenticationPrincipal UserPrincipal user,
+            @RequestBody ClienteDTO cliente) {
         Long clienteId = user.getId();
         ClienteDTO clienteActualizado = clienteService.actualizarCliente(clienteId, cliente);
         return ResponseEntity.ok(clienteActualizado);
     }
-    
+
     @DeleteMapping("/eliminar")
     public ResponseEntity<?> eliminarCliente(@AuthenticationPrincipal UserPrincipal user) {
-    Long clienteId = user.getId();
-    clienteService.eliminarCliente(clienteId);
-    return ResponseEntity.ok("eliminado correctamente");
+        Long clienteId = user.getId();
+        clienteService.eliminarCliente(clienteId);
+        return ResponseEntity.ok("eliminado correctamente");
     }
-
 
     @GetMapping("/turnos")
     public ResponseEntity<?> turnosActivosCliente(@AuthenticationPrincipal UserPrincipal user) {
@@ -66,9 +66,22 @@ public class ClienteController {
     }
 
     @PatchMapping("/cancelar/turno/{turnoId}")
-        public ResponseEntity<?> cancelarTurnoCliente(@AuthenticationPrincipal UserPrincipal user,@PathVariable Long turnoId) {
+    public ResponseEntity<?> cancelarTurnoCliente(@AuthenticationPrincipal UserPrincipal user,
+            @PathVariable Long turnoId) {
         Long clienteId = user.getId();
-        clienteService.cancelarTurno(clienteId,turnoId);
+        clienteService.cancelarTurno(clienteId, turnoId);
         return ResponseEntity.ok("turno cancelado");
+    }
+
+    @PutMapping("/cambiar-password")
+    public ResponseEntity<?> cambiarPassword(@AuthenticationPrincipal UserPrincipal user,
+            @RequestBody CambioPasswordDTO dto) {
+        Long clienteId = user.getId();
+        try {
+            clienteService.cambiarPassword(clienteId, dto.getPasswordActual(), dto.getPasswordNuevo());
+            return ResponseEntity.ok(java.util.Map.of("mensaje", "Contraseña actualizada correctamente"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
     }
 }

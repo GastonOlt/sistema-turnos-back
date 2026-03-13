@@ -1,16 +1,13 @@
 package com.gaston.sistema.turno.sistematunos_back.dto;
 
-public class EmpleadoDto {
+public class PerfilDTO {
     private Long id;
     private String nombre;
     private String apellido;
     private String email;
-    private String rol;
-    private String especialidad;
     private String datosImagen;
     private String tipoContenido;
-    private boolean isDueno;
-    private boolean activoParaTurnos;
+    private String rol;
 
     public Long getId() {
         return id;
@@ -44,14 +41,6 @@ public class EmpleadoDto {
         this.email = email;
     }
 
-    public String getRol() {
-        return rol;
-    }
-
-    public void setRol(String rol) {
-        this.rol = rol;
-    }
-
     public String getDatosImagen() {
         return datosImagen;
     }
@@ -68,27 +57,11 @@ public class EmpleadoDto {
         this.tipoContenido = tipoContenido;
     }
 
-    public String getEspecialidad() {
-        return especialidad;
+    public String getRol() {
+        return rol;
     }
 
-    public void setEspecialidad(String especialidad) {
-        this.especialidad = especialidad;
-    }
-
-    public boolean isDueno() {
-        return isDueno;
-    }
-
-    public void setDueno(boolean isDueno) {
-        this.isDueno = isDueno;
-    }
-
-    public boolean isActivoParaTurnos() {
-        return activoParaTurnos;
-    }
-
-    public void setActivoParaTurnos(boolean activoParaTurnos) {
-        this.activoParaTurnos = activoParaTurnos;
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 }

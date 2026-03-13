@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,39 +18,39 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "turno")
 public class Turno {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")
     @JsonIgnore
     private Cliente cliente;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empleado_id")
     @JsonIgnore
     private Empleado empleado;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_id")
     @JsonIgnore
     private ServicioLocal servicio;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "local_id")
     @JsonIgnore
     private Local local;
-    
+
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private LocalDateTime fechaHoraInicioReal;
     private LocalDateTime fechaHoraFinReal;
-    
+
     @Enumerated(EnumType.STRING)
     private EstadoTurno estado;
-    
+
     private boolean adelantado = false;
 
     public Long getId() {
@@ -139,7 +140,5 @@ public class Turno {
     public void setLocal(Local local) {
         this.local = local;
     }
-    
-    
+
 }
- 

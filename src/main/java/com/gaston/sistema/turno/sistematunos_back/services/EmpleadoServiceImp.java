@@ -33,46 +33,42 @@ public class EmpleadoServiceImp implements EmpleadoService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public EmpleadoDto crearEmpleado(Empleado empleado, Long duenoId , MultipartFile archivo) {
+    public EmpleadoDto crearEmpleado(Empleado empleado, Long duenoId, MultipartFile archivo) {
         try {
-           if(empleadoRepository.findByEmail(empleado.getEmail()).isPresent()){
-               throw new EmailExistenteException("Email ya registrado");
-           }
+            if (empleadoRepository.findByEmail(empleado.getEmail()).isPresent()) {
+                throw new EmailExistenteException("Email ya registrado");
+            }
 
-           ImagenLocal imgEmpleado = new ImagenLocal();
-           imgEmpleado.setNombreArchivo(archivo.getOriginalFilename());
-           imgEmpleado.setTipoArchivo(archivo.getContentType());
-           imgEmpleado.setDatosImagen(archivo.getBytes());
+            ImagenLocal imgEmpleado = new ImagenLocal();
+            imgEmpleado.setNombreArchivo(archivo.getOriginalFilename());
+            imgEmpleado.setTipoArchivo(archivo.getContentType());
+            imgEmpleado.setDatosImagen(archivo.getBytes());
 
-           empleado.setImagenEmpleado(imgEmpleado);
+            empleado.setImagenEmpleado(imgEmpleado);
 
-           Local localDb = localService.obtenerPorDueno(duenoId);
-           if(localDb.getEmpleados().size() >=5 ){
-              throw new IllegalArgumentException("No puedes tener mas de 5 empleados");
-           }
-           localDb.getEmpleados().add(empleado);
+            Local localDb = localService.obtenerPorDuenoEntidad(duenoId);
+            localDb.getEmpleados().add(empleado);
 
-           empleado.setPassword(passwordEncoder.encode(empleado.getPassword()));
-           empleado.setLocal(localDb);
-           empleado.setRol("EMPLEADO");
+            empleado.setPassword(passwordEncoder.encode(empleado.getPassword()));
+            empleado.setLocal(localDb);
+            empleado.setRol("EMPLEADO");
 
-           Empleado nuevoEmpleado = empleadoRepository.save(empleado);
-        
-           return  empleadoDto(nuevoEmpleado);
+            Empleado nuevoEmpleado = empleadoRepository.save(empleado);
+
+            return empleadoDto(nuevoEmpleado);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    
     @Override
-    public EmpleadoDto editarEmpleado(Empleado empleado, MultipartFile archivo,Long empleadoId,Long duenoId) {
-        try{
-            Empleado empleadoDb = empleadoRepository.findById(empleadoId).orElseThrow(() ->
-                                     new IllegalArgumentException("No se encontro el empleado con ese id "+empleado.getId()));
+    public EmpleadoDto editarEmpleado(Empleado empleado, MultipartFile archivo, Long empleadoId, Long duenoId) {
+        try {
+            Empleado empleadoDb = empleadoRepository.findById(empleadoId).orElseThrow(
+                    () -> new IllegalArgumentException("No se encontro el empleado con ese id " + empleado.getId()));
 
             if (!empleadoDb.getLocal().getDueno().getId().equals(duenoId)) {
-              throw new AccessDeniedException("No tienes permisos para editar este empleado");
+                throw new AccessDeniedException("No tienes permisos para editar este empleado");
             }
 
             empleadoDb.setApellido(empleado.getApellido());
@@ -81,7 +77,7 @@ public class EmpleadoServiceImp implements EmpleadoService {
             empleadoDb.setEmail(empleado.getEmail());
             // empleadoDb.setPassword(empleado.getPassword());
 
-            if(archivo != null && !archivo.isEmpty()){
+            if (archivo != null && !archivo.isEmpty()) {
                 ImagenLocal img = empleadoDb.getImagenEmpleado();
                 if (img != null) {
                     imagenLocalRepository.delete(img);
@@ -96,64 +92,62 @@ public class EmpleadoServiceImp implements EmpleadoService {
 
             Empleado empleadoEditado = empleadoRepository.save(empleadoDb);
             return empleadoDto(empleadoEditado);
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
-         }
-    }
-    
-
-    @Override
-    public void eliminarEmpleado(Long empleadoId,Long duenoId) {
-        Empleado empleadoDb = empleadoRepository.findById(empleadoId).orElseThrow(()-> 
-                         new IllegalArgumentException("no se encontro el empleado con ese id" + empleadoId ));
-
-         if (!empleadoDb.getLocal().getDueno().getId().equals(duenoId)) {
-              throw new AccessDeniedException("No tienes permisos para eliminar este empleado");
         }
-        empleadoRepository.deleteById(empleadoId);
-     }
+    }
 
-     
-     @Override
-     public List<EmpleadoDto> obtenerEmpleados(Long duenoId) {
-        Local localDb = localService.obtenerPorDueno(duenoId);
-         return empleadoRepository.findByLocalId(localDb.getId()).stream().map(emple -> empleadoDto(emple)).toList();
-      }
-        
     @Override
-    public EmpleadoDto obtenerEmpleado(Long empleadoId,Long duenoId) {
-        Empleado empleadoDb = empleadoRepository.findById(empleadoId).orElseThrow(()-> 
-                            new IllegalArgumentException("no se encontro el empleado con ese id" + empleadoId ));
+    public void eliminarEmpleado(Long empleadoId, Long duenoId) {
+        Empleado empleadoDb = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new IllegalArgumentException("no se encontro el empleado con ese id" + empleadoId));
 
         if (!empleadoDb.getLocal().getDueno().getId().equals(duenoId)) {
-              throw new AccessDeniedException("No tienes permisos para ver este empleado");
+            throw new AccessDeniedException("No tienes permisos para eliminar este empleado");
         }
-          return empleadoDto(empleadoDb);
+        empleadoRepository.deleteById(empleadoId);
+    }
+
+    @Override
+    public List<EmpleadoDto> obtenerEmpleados(Long duenoId) {
+        Local localDb = localService.obtenerPorDuenoEntidad(duenoId);
+        return empleadoRepository.findByLocalId(localDb.getId()).stream().map(emple -> empleadoDto(emple)).toList();
+    }
+
+    @Override
+    public EmpleadoDto obtenerEmpleado(Long empleadoId, Long duenoId) {
+        Empleado empleadoDb = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new IllegalArgumentException("no se encontro el empleado con ese id" + empleadoId));
+
+        if (!empleadoDb.getLocal().getDueno().getId().equals(duenoId)) {
+            throw new AccessDeniedException("No tienes permisos para ver este empleado");
+        }
+        return empleadoDto(empleadoDb);
     }
 
     @Override
     public Empleado obtenerEmpleadoEntity(Long empleadoId) {
-        Empleado empl = empleadoRepository.findById(empleadoId).orElseThrow(()-> 
-                                new IllegalArgumentException("error al encontrar al empleado"));
+        Empleado empl = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new IllegalArgumentException("error al encontrar al empleado"));
         return empl;
     }
 
+    public EmpleadoDto empleadoDto(Empleado empleado) {
+        EmpleadoDto respDto = new EmpleadoDto();
+        respDto.setId(empleado.getId());
+        respDto.setApellido(empleado.getApellido());
+        respDto.setNombre(empleado.getNombre());
+        respDto.setEmail(empleado.getEmail());
+        respDto.setRol(empleado.getRol());
+        respDto.setEspecialidad(empleado.getEspecialidad());
+        respDto.setDueno(empleado.isDueno());
+        respDto.setActivoParaTurnos(empleado.isActivoParaTurnos());
 
-    public EmpleadoDto empleadoDto(Empleado empleado){
-            EmpleadoDto respDto = new EmpleadoDto();
-            respDto.setId(empleado.getId());
-            respDto.setApellido(empleado.getApellido());
-            respDto.setNombre(empleado.getNombre());
-            respDto.setEmail(empleado.getEmail());
-            respDto.setRol(empleado.getRol());
-            respDto.setEspecialidad(empleado.getEspecialidad());
-
-            if(empleado.getImagenEmpleado() != null){
+        if (empleado.getImagenEmpleado() != null) {
             respDto.setDatosImagen(Base64.getEncoder().encodeToString(empleado.getImagenEmpleado().getDatosImagen()));
             respDto.setTipoContenido(empleado.getImagenEmpleado().getTipoArchivo());
-            }
-            return respDto;
+        }
+        return respDto;
     }
-
 
 }

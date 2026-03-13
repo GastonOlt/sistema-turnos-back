@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +19,8 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Resenia;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ClienteRepository;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ReseniaRepository;
 
-
 @Service
-public class ClienteServiceImp implements ClienteService{
+public class ClienteServiceImp implements ClienteService {
 
     @Autowired
     private ClienteRepository clienteRepository;
@@ -28,12 +28,15 @@ public class ClienteServiceImp implements ClienteService{
     @Autowired
     private ReseniaRepository reseniaRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
     public Cliente crearCliente(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public Optional<Cliente> findByEmail(String email) {
@@ -43,15 +46,15 @@ public class ClienteServiceImp implements ClienteService{
     @Override
     @Transactional(readOnly = true)
     public Cliente obtenerPorId(Long id) {
-      try {
-          Cliente clienteDb = clienteRepository.findById(id).orElseThrow(()->
-                                                    new IllegalArgumentException("no se encontro el cliente con este Id: "+id));
-          return clienteDb;
-      } catch (Exception e) {
-              throw new IllegalArgumentException(e.getMessage());
-      }
+        try {
+            Cliente clienteDb = clienteRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("no se encontro el cliente con este Id: " + id));
+            return clienteDb;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public ClienteDTO obtenerClienteDTOPorId(Long id) {
@@ -59,7 +62,6 @@ public class ClienteServiceImp implements ClienteService{
         return convertirAClienteDTO(cliente);
     }
 
-  
     @Override
     @Transactional
     public ClienteDTO actualizarCliente(Long id, ClienteDTO clienteDTO) {
@@ -70,11 +72,11 @@ public class ClienteServiceImp implements ClienteService{
                 throw new IllegalArgumentException("El email ya está en uso");
             }
         }
-        
+
         cliente.setNombre(clienteDTO.getNombre());
         cliente.setApellido(clienteDTO.getApellido());
         cliente.setEmail(clienteDTO.getEmail());
-        
+
         Cliente clienteActualizado = clienteRepository.save(cliente);
         return convertirAClienteDTO(clienteActualizado);
     }
@@ -88,16 +90,16 @@ public class ClienteServiceImp implements ClienteService{
 
     ////////// TURNOS //////////
     /// ///////////////////////
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<TurnoClienteDTO> obtenerTurnosActivos(Long clienteId) {
         Cliente cliente = obtenerPorId(clienteId);
         LocalDateTime ahora = LocalDateTime.now();
-        
+
         return cliente.getTurnos().stream()
-                .filter(turno -> turno.getFechaHoraInicio().isAfter(ahora) && 
-                               turno.getEstado() == EstadoTurno.CONFIRMADO || turno.getEstado() == EstadoTurno.PENDIENTE)
+                .filter(turno -> turno.getFechaHoraInicio().isAfter(ahora) &&
+                        turno.getEstado() == EstadoTurno.CONFIRMADO || turno.getEstado() == EstadoTurno.PENDIENTE)
                 .map(this::convertirATurnoClienteDTO)
                 .collect(Collectors.toList());
     }
@@ -107,11 +109,11 @@ public class ClienteServiceImp implements ClienteService{
     public List<TurnoClienteDTO> obtenerHistorialTurnos(Long clienteId) {
         Cliente cliente = obtenerPorId(clienteId);
         LocalDateTime ahora = LocalDateTime.now();
-        
+
         return cliente.getTurnos().stream()
-                .filter(turno -> turno.getFechaHoraInicio().isBefore(ahora) || 
-                               turno.getEstado() == EstadoTurno.FINALIZADO ||
-                               turno.getEstado() == EstadoTurno.CANCELADO)
+                .filter(turno -> turno.getFechaHoraInicio().isBefore(ahora) ||
+                        turno.getEstado() == EstadoTurno.FINALIZADO ||
+                        turno.getEstado() == EstadoTurno.CANCELADO)
                 .map(this::convertirATurnoClienteDTO)
                 .collect(Collectors.toList());
     }
@@ -120,17 +122,28 @@ public class ClienteServiceImp implements ClienteService{
     @Transactional
     public void cancelarTurno(Long clienteId, Long turnoId) {
         Cliente cliente = obtenerPorId(clienteId);
-        
+
         Turno turno = cliente.getTurnos().stream()
                 .filter(t -> t.getId().equals(turnoId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado"));
-        
+
         // if (turno.getFechaHoraInicio().isBefore(LocalDateTime.now())) {
-        //     throw new IllegalArgumentException("No se puede cancelar un turno pasado");
+        // throw new IllegalArgumentException("No se puede cancelar un turno pasado");
         // }
-        
+
         turno.setEstado(EstadoTurno.CANCELADO);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarPassword(Long clienteId, String passwordActual, String passwordNuevo) {
+        Cliente cliente = obtenerPorId(clienteId);
+        if (!passwordEncoder.matches(passwordActual, cliente.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+        }
+        cliente.setPassword(passwordEncoder.encode(passwordNuevo));
+        clienteRepository.save(cliente);
     }
 
     private ClienteDTO convertirAClienteDTO(Cliente cliente) {
@@ -147,13 +160,13 @@ public class ClienteServiceImp implements ClienteService{
         dto.setId(turno.getId());
         dto.setFechaHoraInicio(turno.getFechaHoraInicio());
         dto.setFechaHoraFin(turno.getFechaHoraFin());
-        dto.setEstado(turno.getEstado().name()); 
-        
+        dto.setEstado(turno.getEstado().name());
+
         if (turno.getLocal() != null) {
             dto.setNombreLocal(turno.getLocal().getNombre());
             dto.setDireccionLocal(turno.getLocal().getDireccion());
         }
-        
+
         if (turno.getServicio() != null) {
             dto.setServicio(turno.getServicio().getNombre());
             dto.setPrecio(turno.getServicio().getPrecio());
@@ -164,7 +177,7 @@ public class ClienteServiceImp implements ClienteService{
             dto.setCalificacion(resenia.get().getCalificacion());
             dto.setComentario(resenia.get().getComentario());
         }
-        
+
         return dto;
     }
 
