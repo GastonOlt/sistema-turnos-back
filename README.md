@@ -35,7 +35,7 @@
 
 ## 🎯 Descripción General
 
-**TuTurno** es un sistema backend diseñado para resolver el desafío operativo central que enfrentan los negocios basados en servicios (peluquerías, barberías, spas, etc.): **la gestión eficiente de turnos y reservas**.
+**TuTurno** es un sistema backend diseñado para resolver el desafío operativo central que enfrentan los negocios basados en servicios (peluquerías, barberías): **la gestión eficiente de turnos y reservas**.
 
 La plataforma habilita un ecosistema multi-rol donde:
 
@@ -465,8 +465,6 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 spring.servlet.multipart.max-file-size=5MB
 spring.servlet.multipart.max-request-size=20MB
 ```
-
-> ⚠️ **Importante:** El archivo `application.properties` está listado en `.gitignore`. **Nunca subas credenciales al control de versiones.**
 
 ---
 
