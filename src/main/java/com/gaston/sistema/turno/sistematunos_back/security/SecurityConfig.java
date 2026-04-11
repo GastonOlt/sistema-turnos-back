@@ -53,13 +53,13 @@ public class SecurityConfig {
             .exceptionHandling(excep -> excep.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/autenticacion/**").permitAll()
-                .requestMatchers("/publico/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/public/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 
-                .requestMatchers("/dueno/**").hasRole("DUENO")
-                .requestMatchers("/empleado/**").hasAnyRole("DUENO","EMPLEADO")
-                .requestMatchers("/cliente/**").hasRole("CLIENTE")
+                .requestMatchers("/owner/**").hasRole("DUENO")
+                .requestMatchers("/employee/**").hasAnyRole("DUENO","EMPLEADO")
+                .requestMatchers("/client/**").hasRole("CLIENTE")
              
                 .anyRequest().authenticated()
             )

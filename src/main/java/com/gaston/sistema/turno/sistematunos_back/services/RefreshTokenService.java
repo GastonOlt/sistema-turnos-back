@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.gaston.sistema.turno.sistematunos_back.entities.RefreshToken;
-import com.gaston.sistema.turno.sistematunos_back.entities.Usuario;
+import com.gaston.sistema.turno.sistematunos_back.entities.User;
 import com.gaston.sistema.turno.sistematunos_back.repositories.RefreshTokenRepository;
-import com.gaston.sistema.turno.sistematunos_back.repositories.UsuarioRepository;
+import com.gaston.sistema.turno.sistematunos_back.repositories.UserRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -21,11 +21,11 @@ public class RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UsuarioRepository usuarioRepository) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
-        this.usuarioRepository = usuarioRepository;
+        this.userRepository = userRepository;
     }
 
     public Optional<RefreshToken> findByToken(String token){
@@ -33,14 +33,14 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(Long usuarioId){
-        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(); 
-        refreshTokenRepository.deleteByUsuario(usuario);
-        
+    public RefreshToken createRefreshToken(Long userId){
+        User user = userRepository.findById(userId).orElseThrow();
+        refreshTokenRepository.deleteByUser(user);
+
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUsuario(usuario);
+        refreshToken.setUser(user);
         refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setFechaExpiracion(Instant.now().plusMillis(refreshTokenDurationMs));
+        refreshToken.setExpirationDate(Instant.now().plusMillis(refreshTokenDurationMs));
 
         return refreshTokenRepository.save(refreshToken);
     }
@@ -50,7 +50,7 @@ public class RefreshTokenService {
     }
 
     public RefreshToken verifyExpiration(RefreshToken token){
-        if(token.getFechaExpiracion().isBefore(Instant.now())){
+        if(token.getExpirationDate().isBefore(Instant.now())){
             refreshTokenRepository.delete(token);
             throw new RuntimeException("El Refresh Token ha expirado. Por favor inicie sesión de nuevo");
         }

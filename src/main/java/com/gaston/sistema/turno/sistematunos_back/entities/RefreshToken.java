@@ -19,13 +19,13 @@ public class RefreshToken {
 
     @OneToOne
     @JoinColumn(name = "user_id")
-    private Usuario usuario;
+    private User user;
 
     @Column(nullable = false, unique = true)
     private String token;
 
     @Column(nullable = false)
-    private Instant fechaExpiracion;
+    private Instant expirationDate;
 
     public Long getId() {
         return id;
@@ -35,12 +35,12 @@ public class RefreshToken {
         this.id = id;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public User getUser() {
+        return user;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getToken() {
@@ -51,13 +51,11 @@ public class RefreshToken {
         this.token = token;
     }
 
-    public Instant getFechaExpiracion() {
-        return fechaExpiracion;
+    public Instant getExpirationDate() {
+        return expirationDate;
     }
 
-    public void setFechaExpiracion(Instant fechaExpiracion) {
-        this.fechaExpiracion = fechaExpiracion;
+    public void setExpirationDate(Instant expirationDate) {
+        this.expirationDate = expirationDate;
     }
 }
-
-    

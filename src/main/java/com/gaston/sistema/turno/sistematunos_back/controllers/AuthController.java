@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.LoginRequest;
-import com.gaston.sistema.turno.sistematunos_back.dto.UsuarioDTO;
-import com.gaston.sistema.turno.sistematunos_back.entities.Cliente;
-import com.gaston.sistema.turno.sistematunos_back.entities.Dueno;
+import com.gaston.sistema.turno.sistematunos_back.dto.UserDTO;
+import com.gaston.sistema.turno.sistematunos_back.entities.Client;
+import com.gaston.sistema.turno.sistematunos_back.entities.Owner;
 import com.gaston.sistema.turno.sistematunos_back.services.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,10 +26,9 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
 @RestController
-@RequestMapping("/autenticacion")
-@Tag(name = "Autenticación", description = "Endpoints para registro y login. Maneja Cookies HttpOnly.")
+@RequestMapping("/auth")
+@Tag(name = "Authentication", description = "Endpoints for registration and login. Handles HttpOnly Cookies.")
 public class AuthController {
 
     private final AuthService authService;
@@ -38,45 +37,45 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @Operation(summary = "Registrar nuevo Cliente", description = "Crea un usuario con rol CLIENTE.")
-    @ApiResponse(responseCode = "201", description = "Cliente creado exitosamente")
+    @Operation(summary = "Register a new Client", description = "Creates a user with the CLIENT role.")
+    @ApiResponse(responseCode = "201", description = "Client created successfully")
     @SecurityRequirements()
-    @PostMapping("/cliente")
-    public ResponseEntity<UsuarioDTO> crearCliente(@Valid @RequestBody Cliente cliente) {
-        UsuarioDTO clienteRegistrado = authService.registrarCliente(cliente);
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteRegistrado);
+    @PostMapping("/client")
+    public ResponseEntity<UserDTO> registerClient(@Valid @RequestBody Client client) {
+        UserDTO registeredClient = authService.registerClient(client);
+        return ResponseEntity.status(HttpStatus.CREATED).body(registeredClient);
     }
 
-    @Operation(summary = "Registrar nuevo Dueño", description = "Crea un usuario con rol DUEÑO.")
-    @ApiResponse(responseCode = "201", description = "Dueño creado exitosamente")
+    @Operation(summary = "Register a new Owner", description = "Creates a user with the OWNER role.")
+    @ApiResponse(responseCode = "201", description = "Owner created successfully")
     @SecurityRequirements()
-    @PostMapping("/dueno")
-    public ResponseEntity<UsuarioDTO> crearDueno(@Valid @RequestBody Dueno dueno) {
-      UsuarioDTO duenoRegistrado = authService.registrarDueno(dueno);
-       return ResponseEntity.status(HttpStatus.CREATED).body(duenoRegistrado);
+    @PostMapping("/owner")
+    public ResponseEntity<UserDTO> registerOwner(@Valid @RequestBody Owner owner) {
+      UserDTO registeredOwner = authService.registerOwner(owner);
+       return ResponseEntity.status(HttpStatus.CREATED).body(registeredOwner);
     }
-    
-    @Operation(summary = "Iniciar Sesión", description = "Verifica credenciales y devuelve tokens en Cookies HttpOnly (no visibles en response body).")
-    @ApiResponse(responseCode = "200", description = "Login exitoso. Las cookies 'accessToken' y 'refreshToken' han sido seteadas.")
-    @ApiResponse(responseCode = "401", description = "Credenciales inválidas", content = @Content)
+
+    @Operation(summary = "Login", description = "Verifies credentials and returns tokens in HttpOnly Cookies (not visible in response body).")
+    @ApiResponse(responseCode = "200", description = "Login successful. The 'accessToken' and 'refreshToken' cookies have been set.")
+    @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     @SecurityRequirements()
     @PostMapping("/login")
-    public ResponseEntity<?> loginCliente(@RequestBody LoginRequest req){
-        Map<String, ResponseCookie> cookies = authService.Login(req);
+    public ResponseEntity<?> login(@RequestBody LoginRequest req){
+        Map<String, ResponseCookie> cookies = authService.login(req);
         return ResponseEntity.status(HttpStatus.OK)
                    .header(HttpHeaders.SET_COOKIE, cookies.get("jwt").toString())
                    .header(HttpHeaders.SET_COOKIE, cookies.get("refreshToken").toString())
                    .body((Map.of("mensaje", "Login exitoso")));
     }
 
-    @Operation(summary = "Refrescar Token", description = "Usa la cookie 'refreshToken' para generar un nuevo 'accessToken' sin loguearse de nuevo.")
+    @Operation(summary = "Refresh Token", description = "Uses the 'refreshToken' cookie to generate a new 'accessToken' without logging in again.")
     @PostMapping("/refresh")
-    public ResponseEntity<?> refrescarToken(@CookieValue(name = "refreshToken") String refreshTokenValue) {
-        Map<String, ResponseCookie> nuevasCookies = authService.refrescarSesionConCookies(refreshTokenValue);
-        
+    public ResponseEntity<?> refreshToken(@CookieValue(name = "refreshToken") String refreshTokenValue) {
+        Map<String, ResponseCookie> newCookies = authService.refreshSessionWithCookies(refreshTokenValue);
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, nuevasCookies.get("jwt").toString())
-                .header(HttpHeaders.SET_COOKIE, nuevasCookies.get("refresh").toString())
+                .header(HttpHeaders.SET_COOKIE, newCookies.get("jwt").toString())
+                .header(HttpHeaders.SET_COOKIE, newCookies.get("refresh").toString())
                 .body(Map.of("mensaje", "Token renovado exitosamente"));
     }
 }
