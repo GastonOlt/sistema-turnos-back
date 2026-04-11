@@ -17,14 +17,14 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                    .title("API TuTurno - Sistema de Gestión")
+                    .title("TuTurno API - Management System")
                         .version("1.0.0")
-                        .description("Documentación del Backend. \n\n" +
-                                     "**Nota de Seguridad:** Esta API utiliza **Cookies HttpOnly**. " +
-                                     "Para probar los endpoints protegidos en esta interfaz:\n" +
-                                     "1. Ejecuta el endpoint `/autenticacion/login` con credenciales válidas.\n" +
-                                     "2. El navegador guardará la cookie automáticamente.\n" +
-                                     "3. Luego podrás ejecutar cualquier endpoint protegido (candado cerrado).")
+                        .description("Backend Documentation. \n\n" +
+                                     "**Security Note:** This API uses **HttpOnly Cookies**. " +
+                                     "To test protected endpoints in this interface:\n" +
+                                     "1. Execute the `/auth/login` endpoint with valid credentials.\n" +
+                                     "2. The browser will automatically save the cookie.\n" +
+                                     "3. Then you will be able to execute any protected endpoint (closed padlock).")
                         .contact(new Contact()
                         .name("Gastón Olartes")))
                 .addSecurityItem(new SecurityRequirement().addList("cookieAuth")) 
@@ -34,7 +34,7 @@ public class OpenApiConfig {
                                         .name("accessToken")
                                         .type(SecurityScheme.Type.APIKEY)
                                         .in(SecurityScheme.In.COOKIE)
-                                        .description("JWT Access Token almacenado en cookie HttpOnly")
+                                        .description("JWT Access Token stored in HttpOnly cookie")
                         ));
     }
 }

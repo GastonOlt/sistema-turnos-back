@@ -6,25 +6,25 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.gaston.sistema.turno.sistematunos_back.entities.Usuario;
-import com.gaston.sistema.turno.sistematunos_back.repositories.UsuarioRepository;
+import com.gaston.sistema.turno.sistematunos_back.entities.User;
+import com.gaston.sistema.turno.sistematunos_back.repositories.UserRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuarioDb = usuarioRepository.findByEmail(username).orElseThrow(() ->
+        User userDb = userRepository.findByEmail(username).orElseThrow(() ->
                  new UsernameNotFoundException("usuario con ese email no encontrado :" + username));
-        return UserPrincipal.crear(usuarioDb);
+        return UserPrincipal.create(userDb);
     }
-    
+
     public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
-        Usuario usuarioDb = usuarioRepository.findById(id).orElseThrow(() ->
+        User userDb = userRepository.findById(id).orElseThrow(() ->
                  new UsernameNotFoundException("usuario con ese id no encontrado :" + id));
-        return UserPrincipal.crear(usuarioDb);
+        return UserPrincipal.create(userDb);
     }
 }

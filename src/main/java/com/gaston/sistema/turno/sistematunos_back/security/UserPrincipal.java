@@ -7,36 +7,35 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.gaston.sistema.turno.sistematunos_back.entities.Usuario;
+import com.gaston.sistema.turno.sistematunos_back.entities.User;
 
 public class UserPrincipal implements UserDetails{
 
     private Long id;
-    private String nombre;
-    private String apellido;
+    private String name;
+    private String lastName;
     private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
 
-    
-    public UserPrincipal(Long id, String nombre, String apellido, String email, String password,
+    public UserPrincipal(Long id, String name, String lastName, String email, String password,
             Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
-        this.nombre = nombre;
-        this.apellido = apellido;
+        this.name = name;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
     }
 
-    public static UserPrincipal crear(Usuario usuario){
-        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_"+usuario.getRol());
+    public static UserPrincipal create(User user){
+        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_"+user.getRole());
         return new UserPrincipal(
-            usuario.getId(),
-            usuario.getNombre(),
-            usuario.getApellido(),
-            usuario.getEmail(),
-            usuario.getPassword(),
+            user.getId(),
+            user.getName(),
+            user.getLastName(),
+            user.getEmail(),
+            user.getPassword(),
            Collections.singletonList(authority));
     }
 
@@ -63,20 +62,20 @@ public class UserPrincipal implements UserDetails{
         this.id = id;
     }
 
-    public String getNombre() {
-        return nombre;
+    public String getName() {
+        return name;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getApellido() {
-        return apellido;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {
@@ -90,8 +89,4 @@ public class UserPrincipal implements UserDetails{
     public void setPassword(String password) {
         this.password = password;
     }
-
-
-    
-
 }

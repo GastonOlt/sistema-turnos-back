@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import com.gaston.sistema.turno.sistematunos_back.entities.Usuario;
+import com.gaston.sistema.turno.sistematunos_back.entities.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -22,7 +22,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String jwtSecretString;
 
-    private final long jwtExpirationInMs = 900000;//15mn 
+    private final long jwtExpirationInMs = 900000;//15mn
 
     private SecretKey secretKey;
 
@@ -46,19 +46,19 @@ public class JwtTokenProvider {
                     .compact();
     }
 
-    public String generateTokenDesdeUsuario(Usuario usuario){
+    public String generateTokenFromUser(User user){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime()+jwtExpirationInMs);
-        Long usuarioId = usuario.getId();
+        Long userId = user.getId();
 
         return Jwts.builder()
-                    .setSubject(usuarioId.toString())
+                    .setSubject(userId.toString())
                     .setIssuedAt(now)
                     .setExpiration(expiryDate)
                     .signWith(secretKey)
                     .compact();
     }
-    
+
     public Long getIdFromToken(String token){
         Claims claims = Jwts.parserBuilder()
                         .setSigningKey(secretKey)
@@ -77,6 +77,4 @@ public class JwtTokenProvider {
         }
         return false;
     }
-
-
 }
