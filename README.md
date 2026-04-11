@@ -1,7 +1,7 @@
 <p align="center">
-  <h1 align="center">💈 TuTurno — Sistema de Gestión de Turnos</h1>
+  <h1 align="center">💈 TuTurno — Appointment Management System</h1>
   <p align="center">
-    <strong>API RESTful para la gestión de turnos en negocios de servicios</strong>
+    <strong>RESTful API for appointment management in service-based businesses</strong>
   </p>
 </p>
 
@@ -12,434 +12,434 @@
   <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white" alt="JWT"/>
   <img src="https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apache-maven&logoColor=white" alt="Maven"/>
   <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger"/>
-  <img src="https://img.shields.io/badge/Licencia-MIT-blue?style=for-the-badge" alt="Licencia"/>
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"/>
 </p>
 
 ---
 
-## 📋 Tabla de Contenidos
+## 📋 Table of Contents
 
-- [Descripción General](#-descripción-general)
-- [Stack Técnico](#-stack-técnico)
-- [Características Principales](#-características-principales)
-- [Arquitectura](#-arquitectura)
-- [Modelo de Datos](#-modelo-de-datos)
-- [Documentación de la API](#-documentación-de-la-api)
-- [Instalación y Configuración](#-instalación-y-configuración)
-- [Variables de Entorno](#-variables-de-entorno)
-- [Ejecución del Proyecto](#-ejecución-del-proyecto)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Autor](#-autor)
-
----
-
-## 🎯 Descripción General
-
-**TuTurno** es un sistema backend diseñado para resolver el desafío operativo central que enfrentan los negocios basados en servicios (peluquerías, barberías): **la gestión eficiente de turnos y reservas**.
-
-La plataforma habilita un ecosistema multi-rol donde:
-
-- **Dueños** crean y administran su local, definen servicios, registran empleados, configuran horarios y suben imágenes del negocio.
-- **Empleados** gestionan sus horarios personales, confirman/cancelan turnos, registran atenciones sin reserva previa y consultan sus ganancias.
-- **Clientes** exploran locales disponibles mediante búsqueda paginada con filtros, consultan disponibilidad en tiempo real, reservan turnos, dejan reseñas y gestionan su perfil.
-
-El sistema automatiza las transiciones del ciclo de vida de los turnos, envía recordatorios por email mediante tareas programadas y aplica control de acceso estricto basado en roles.
+- [Overview](#-overview)
+- [Tech Stack](#-tech-stack)
+- [Key Features](#-key-features)
+- [Architecture](#-architecture)
+- [Data Model](#-data-model)
+- [API Documentation](#-api-documentation)
+- [Installation & Setup](#-installation--setup)
+- [Environment Variables](#-environment-variables)
+- [Running the Project](#-running-the-project)
+- [Project Structure](#-project-structure)
+- [Author](#-author)
 
 ---
 
-## 🛠 Stack Técnico
+## 🎯 Overview
 
-| Categoría | Tecnología | Versión |
+**TuTurno** is a backend system designed to solve the core operational challenge faced by service-based businesses (hair salons, barbershops): **efficient appointment and booking management**.
+
+The platform enables a multi-role ecosystem where:
+
+- **Owners** create and manage their shop, define services, register employees, configure schedules, and upload shop images.
+- **Employees** manage their personal schedules, confirm/cancel appointments, register walk-in appointments, and check their earnings.
+- **Clients** explore available shops through paginated search with filters, check real-time availability, book appointments, leave reviews, and manage their profile.
+
+The system automates appointment lifecycle transitions, sends email reminders via scheduled tasks, and enforces strict role-based access control.
+
+---
+
+## 🛠 Tech Stack
+
+| Category | Technology | Version |
 |---|---|---|
-| **Lenguaje** | Java (OpenJDK) | 21 |
+| **Language** | Java (OpenJDK) | 21 |
 | **Framework** | Spring Boot | 3.5.9 |
-| **Persistencia** | Spring Data JPA / Hibernate | — |
-| **Base de Datos** | PostgreSQL | Runtime |
-| **Seguridad** | Spring Security + JWT (`jjwt`) | 0.11.5 |
-| **Validación** | Jakarta Bean Validation | — |
+| **Persistence** | Spring Data JPA / Hibernate | — |
+| **Database** | PostgreSQL | Runtime |
+| **Security** | Spring Security + JWT (`jjwt`) | 0.11.5 |
+| **Validation** | Jakarta Bean Validation | — |
 | **Email** | Spring Boot Starter Mail | — |
-| **Documentación API** | SpringDoc OpenAPI (Swagger UI) | 2.8.14 |
-| **Herramienta de Build** | Apache Maven | Wrapper incluido |
-| **Herramientas de Desarrollo** | Spring Boot DevTools (recarga en caliente) | — |
+| **API Documentation** | SpringDoc OpenAPI (Swagger UI) | 2.8.14 |
+| **Build Tool** | Apache Maven | Wrapper included |
+| **Development Tools** | Spring Boot DevTools (hot reload) | — |
 
 ---
 
-## ✨ Características Principales
+## ✨ Key Features
 
-### 🔐 Autenticación y Autorización
-- Registro de usuarios con roles diferenciados: `CLIENTE`, `DUENO`, `EMPLEADO`
-- Autenticación stateless mediante **JWT** almacenado en **Cookies HttpOnly** (access token + refresh token)
-- Mecanismo de renovación de token sin necesidad de re-login
-- Encriptación de contraseñas con **BCrypt**
-- Protección de endpoints por roles mediante la cadena de filtros de Spring Security
+### 🔐 Authentication & Authorization
+- User registration with differentiated roles: `CLIENT`, `OWNER`, `EMPLOYEE`
+- Stateless authentication via **JWT** stored in **HttpOnly Cookies** (access token + refresh token)
+- Token renewal mechanism without re-login
+- Password encryption with **BCrypt**
+- Endpoint protection by role through Spring Security's filter chain
 
-### 🏢 Gestión del Local (Dueño)
-- CRUD completo de información del local (nombre, descripción, dirección, provincia, teléfono, tipo, geolocalización)
-- Gestión de galería de imágenes con almacenamiento binario (BYTEA), soporte para carga masiva y edición parcial
-- Cálculo de calificación promedio derivada de las reseñas de clientes
+### 🏢 Shop Management (Owner)
+- Full CRUD for shop information (name, description, address, province, phone, type, geolocation)
+- Image gallery management with binary storage (BYTEA), support for bulk upload and partial editing
+- Average rating calculation derived from client reviews
 
-### 👥 Gestión de Empleados (Dueño)
-- CRUD con carga de imagen de perfil (`multipart/form-data`)
-- Asociación empleado-local con campo de especialidad
-- Gestión de horarios individuales por empleado
+### 👥 Employee Management (Owner)
+- CRUD with profile image upload (`multipart/form-data`)
+- Employee-shop association with specialty field
+- Individual schedule management per employee
 
-### 🕐 Gestión de Horarios
-- Doble alcance: horarios a nivel de **local** y a nivel de **empleado**
-- Configuración por día de la semana (Lunes a Domingo)
-- Horarios de apertura/cierre con toggle activo/inactivo
-- Operaciones CRUD completas para cada alcance
+### 🕐 Schedule Management
+- Dual scope: schedules at **shop** level and at **employee** level
+- Configuration by day of the week (Monday to Sunday)
+- Opening/closing times with active/inactive toggle
+- Full CRUD operations for each scope
 
-### ✂️ Catálogo de Servicios
-- CRUD de servicios ofrecidos (nombre, descripción, precio, duración en minutos)
-- Asociación servicio-local garantizada a nivel de persistencia
+### ✂️ Service Catalog
+- CRUD for offered services (name, description, price, duration in minutes)
+- Service-shop association guaranteed at persistence level
 
-### 📅 Motor de Reserva de Turnos
-- **Cálculo de disponibilidad en tiempo real** mediante `CalculadoraDisponibilidadService`:
-  - Cruza el horario del empleado con los turnos activos existentes
-  - Genera slots de tiempo disponibles en intervalos de 15 minutos según la duración del servicio
-  - Filtra slots pasados y reservas con solapamiento
-- **Detección de solapamiento** mediante consultas JPQL para prevenir doble reserva
-- **Validación de negocio**: verificación de consistencia empleado-servicio-local
-- Los clientes están limitados a un turno activo a la vez
-- Los empleados pueden crear registros de turnos sin reserva previa (cliente anónimo)
+### 📅 Appointment Booking Engine
+- **Real-time availability calculation** via `AvailabilityCalculatorService`:
+  - Crosses employee schedule with existing active appointments
+  - Generates available time slots in 15-minute intervals based on service duration
+  - Filters past slots and overlapping bookings
+- **Overlap detection** via JPQL queries to prevent double booking
+- **Business validation**: employee-service-shop consistency verification
+- Clients are limited to one active appointment at a time
+- Employees can create walk-in appointment records (anonymous client)
 
-### 🔄 Ciclo de Vida del Turno
-- Máquina de estados: `PENDIENTE` → `CONFIRMADO` → `FINALIZADO` / `CANCELADO`
-- **Transiciones automáticas de estado** mediante tareas `@Scheduled` (cada 10 minutos)
-- Tanto clientes como empleados pueden cancelar turnos
-- Los empleados confirman turnos pendientes (dispara email de confirmación)
+### 🔄 Appointment Lifecycle
+- State machine: `PENDING` → `CONFIRMED` → `COMPLETED` / `CANCELLED`
+- **Automatic state transitions** via `@Scheduled` tasks (every 10 minutes)
+- Both clients and employees can cancel appointments
+- Employees confirm pending appointments (triggers confirmation email)
 
-### 📧 Notificaciones por Email
-- Envío de emails **asíncrono** (`@Async`)
-- Email de confirmación enviado al aprobar un turno
-- **Recordatorios diarios** a las 8:00 AM para los turnos confirmados del día
-- Filtro de emails a clientes anónimos
+### 📧 Email Notifications
+- **Asynchronous** email delivery (`@Async`)
+- Confirmation email sent upon appointment approval
+- **Daily reminders** at 8:00 AM for the day's confirmed appointments
+- Anonymous client email filtering
 
-### ⭐ Reseñas y Calificaciones
-- Los clientes publican reseñas (calificación 0–5 + comentario) vinculadas al local y al turno
-- Una única reseña por cliente por local (restricción `UNIQUE` a nivel de base de datos)
-- Endpoints públicos para listar reseñas y obtener el promedio de calificación
+### ⭐ Reviews & Ratings
+- Clients publish reviews (rating 0–5 + comment) linked to the shop and appointment
+- One review per client per shop (`UNIQUE` constraint at database level)
+- Public endpoints to list reviews and get average rating
 
-### 📊 Estadísticas del Empleado
-- Cálculo de ingresos por rango de fechas basado en turnos finalizados
+### 📊 Employee Statistics
+- Earnings calculation by date range based on completed appointments
 
-### 🔍 Descubrimiento Público
-- Búsqueda paginada de locales con filtros opcionales: tipo, provincia, nombre
-- Acceso público a detalles del local, imágenes y reseñas (sin autenticación)
+### 🔍 Public Discovery
+- Paginated shop search with optional filters: type, province, name
+- Public access to shop details, images, and reviews (no authentication required)
 
-### 🛡️ Manejo de Errores
-- Manejo centralizado de excepciones mediante `@RestControllerAdvice`
-- Excepciones personalizadas: `EmailExistenteException`, `CredencialesInvalidasException`
-- Respuestas de error en JSON estructurado con códigos HTTP apropiados
+### 🛡️ Error Handling
+- Centralized exception handling via `@RestControllerAdvice`
+- Custom exceptions: `EmailAlreadyExistsException`, `InvalidCredentialsException`
+- Structured JSON error responses with appropriate HTTP status codes
 
 ---
 
-## 🏛 Arquitectura
+## 🏛 Architecture
 
-El proyecto sigue un patrón de **Arquitectura en Capas (N-Tier)** con separación clara de responsabilidades:
+The project follows a **Layered (N-Tier) Architecture** pattern with clear separation of concerns:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    CLIENTE (Frontend)                     │
+│                    CLIENT (Frontend)                      │
 └──────────────────────┬───────────────────────────────────┘
                        │ HTTP (REST + Cookies)
 ┌──────────────────────▼───────────────────────────────────┐
-│             🔒 Cadena de Filtros de Seguridad            │
+│             🔒 Security Filter Chain                     │
 │        JwtAuthenticationFilter → UserPrincipal           │
 └──────────────────────┬───────────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────────┐
-│              📡 Controladores (API REST)                 │
-│ AuthController · TurnoClienteController · LocalCtrl...   │
-│                 ↕ DTOs para transferencia                │
+│              📡 Controllers (REST API)                   │
+│ AuthController · ClientAppointmentController · ShopCtrl…  │
+│                 ↕ DTOs for data transfer                 │
 └──────────────────────┬───────────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────────┐
-│             ⚙️ Servicios (Lógica de Negocio)            │
-│ TurnoServiceImp · CalculadoraDisponibilidadService       │
-│ AuthService · EmailServiceImp · TurnoTareaScheduler      │
+│             ⚙️ Services (Business Logic)                │
+│ AppointmentServiceImpl · AvailabilityCalculatorService    │
+│ AuthService · EmailServiceImpl · AppointmentTaskScheduler │
 └──────────────────────┬───────────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────────┐
-│            💾 Repositorios (Acceso a Datos)              │
-│      Spring Data JPA + Consultas JPQL Personalizadas     │
+│            💾 Repositories (Data Access)                 │
+│      Spring Data JPA + Custom JPQL Queries               │
 └──────────────────────┬───────────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────────┐
-│                🗄️ Base de Datos PostgreSQL               │
+│                🗄️ PostgreSQL Database                    │
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Flujo de datos:** Cliente → Filtro de Seguridad → Controlador → Servicio → Repositorio → Base de Datos
+**Data flow:** Client → Security Filter → Controller → Service → Repository → Database
 
-**Aspectos transversales:**
-- **Validación:** Anotaciones de Jakarta Bean Validation en entidades y DTOs
-- **Manejo de excepciones:** `GlobalExceptionHandler` con `@RestControllerAdvice`
-- **Tareas programadas:** `TurnoTareaScheduler` para transiciones automáticas de estado y envío de recordatorios
-- **Procesamiento asíncrono:** `@Async` para envío de emails no bloqueante
+**Cross-cutting concerns:**
+- **Validation:** Jakarta Bean Validation annotations on entities and DTOs
+- **Exception handling:** `GlobalExceptionHandler` with `@RestControllerAdvice`
+- **Scheduled tasks:** `AppointmentTaskScheduler` for automatic state transitions and reminder delivery
+- **Asynchronous processing:** `@Async` for non-blocking email delivery
 
 ---
 
-## 📊 Modelo de Datos
+## 📊 Data Model
 
-### Diagrama Entidad-Relación
+### Entity-Relationship Diagram
 
 ```mermaid
 erDiagram
-    USUARIO {
+    USER {
         Long id PK
-        String nombre
-        String apellido
+        String name
+        String lastName
         String email UK
         String password
-        String rol
+        String role
     }
 
-    CLIENTE ||--|| USUARIO : "hereda"
-    DUENO ||--|| USUARIO : "hereda"
-    EMPLEADO ||--|| USUARIO : "hereda"
+    CLIENT ||--|| USER : "inherits"
+    OWNER ||--|| USER : "inherits"
+    EMPLOYEE ||--|| USER : "inherits"
 
-    CLIENTE {
+    CLIENT {
         Long id PK
     }
 
-    DUENO {
+    OWNER {
         Long id PK
-        Long local_id FK
+        Long shop_id FK
     }
 
-    EMPLEADO {
+    EMPLOYEE {
         Long id PK
-        Long local_id FK
-        Long imagen_id FK
-        String especialidad
+        Long shop_id FK
+        Long image_id FK
+        String specialty
     }
 
-    LOCAL {
+    SHOP {
         Long id PK
-        String nombre
-        String descripcion
-        String direccion
-        String provincia
-        String telefono
-        String tipoLocal
-        Double latitud
-        Double longitud
-        Double promedioCalificacion
+        String name
+        String description
+        String address
+        String province
+        String phone
+        String shopType
+        Double latitude
+        Double longitude
+        Double averageRating
     }
 
-    HORARIO {
+    SCHEDULE {
         Long id PK
-        LocalTime horarioApertura
-        LocalTime horarioCierre
-        String diaSemana
-        boolean activo
-        Long local_id FK
-        Long empleado_id FK
+        LocalTime openingTime
+        LocalTime closingTime
+        String dayOfWeek
+        boolean active
+        Long shop_id FK
+        Long employee_id FK
     }
 
-    SERVICIO_LOCAL {
+    SHOP_OFFERING {
         Long id PK
-        String nombre
-        String descripcion
-        int tiempo
-        int precio
-        Long local_id FK
+        String name
+        String description
+        int duration
+        int price
+        Long shop_id FK
     }
 
-    TURNO {
+    APPOINTMENT {
         Long id PK
-        Long cliente_id FK
-        Long empleado_id FK
-        Long servicio_id FK
-        Long local_id FK
-        LocalDateTime fechaHoraInicio
-        LocalDateTime fechaHoraFin
-        LocalDateTime fechaHoraInicioReal
-        LocalDateTime fechaHoraFinReal
-        EstadoTurno estado
-        boolean adelantado
+        Long client_id FK
+        Long employee_id FK
+        Long service_id FK
+        Long shop_id FK
+        LocalDateTime startDateTime
+        LocalDateTime endDateTime
+        LocalDateTime actualStartDateTime
+        LocalDateTime actualEndDateTime
+        AppointmentStatus status
+        boolean early
     }
 
-    IMAGEN_LOCAL {
+    SHOP_IMAGE {
         Long id PK
-        String nombreArchivo
-        String tipoArchivo
-        byte[] datosImagen
-        Long local_id FK
+        String fileName
+        String fileType
+        byte[] imageData
+        Long shop_id FK
     }
 
-    RESENIA {
+    REVIEW {
         Long id PK
-        Double calificacion
-        String comentario
-        LocalDateTime fechaUltimaModificacion
-        Long turno_id FK
-        Long local_id FK
-        Long cliente_id FK
+        Double rating
+        String comment
+        LocalDateTime lastModifiedDate
+        Long appointment_id FK
+        Long shop_id FK
+        Long client_id FK
     }
 
     REFRESH_TOKEN {
         Long id PK
         Long user_id FK
         String token UK
-        Instant fechaExpiracion
+        Instant expirationDate
     }
 
-    DUENO ||--|| LOCAL : "posee"
-    LOCAL ||--o{ EMPLEADO : "tiene"
-    LOCAL ||--o{ HORARIO : "tiene"
-    LOCAL ||--o{ SERVICIO_LOCAL : "ofrece"
-    LOCAL ||--o{ TURNO : "aloja"
-    LOCAL ||--o{ IMAGEN_LOCAL : "tiene"
-    EMPLEADO ||--o{ HORARIO : "tiene"
-    EMPLEADO ||--o{ TURNO : "atiende"
-    EMPLEADO ||--o| IMAGEN_LOCAL : "perfil"
-    CLIENTE ||--o{ TURNO : "reserva"
-    CLIENTE ||--o{ RESENIA : "escribe"
-    LOCAL ||--o{ RESENIA : "recibe"
-    TURNO ||--o| RESENIA : "reseñado"
-    SERVICIO_LOCAL ||--o{ TURNO : "define"
-    USUARIO ||--|| REFRESH_TOKEN : "tiene"
+    OWNER ||--|| SHOP : "owns"
+    SHOP ||--o{ EMPLOYEE : "has"
+    SHOP ||--o{ SCHEDULE : "has"
+    SHOP ||--o{ SHOP_OFFERING : "offers"
+    SHOP ||--o{ APPOINTMENT : "hosts"
+    SHOP ||--o{ SHOP_IMAGE : "has"
+    EMPLOYEE ||--o{ SCHEDULE : "has"
+    EMPLOYEE ||--o{ APPOINTMENT : "attends"
+    EMPLOYEE ||--o| SHOP_IMAGE : "profile"
+    CLIENT ||--o{ APPOINTMENT : "books"
+    CLIENT ||--o{ REVIEW : "writes"
+    SHOP ||--o{ REVIEW : "receives"
+    APPOINTMENT ||--o| REVIEW : "reviewed"
+    SHOP_OFFERING ||--o{ APPOINTMENT : "defines"
+    USER ||--|| REFRESH_TOKEN : "has"
 ```
 
-### Estrategia de Herencia
-La entidad `Usuario` utiliza **herencia JPA con tablas separadas (Joined Table)** (`@Inheritance(strategy = InheritanceType.JOINED)`), creando tablas independientes para `Cliente`, `Dueno` y `Empleado` que se unen con la tabla `usuario`.
+### Inheritance Strategy
+The `User` entity uses **JPA Joined Table inheritance** (`@Inheritance(strategy = InheritanceType.JOINED)`), creating separate tables for `Client`, `Owner`, and `Employee` that join with the `app_user` table.
 
-### Estados del Turno
+### Appointment Statuses
 
-| Estado | Descripción |
+| Status | Description |
 |---|---|
-| `PENDIENTE` | Reservado por el cliente, pendiente de confirmación del empleado |
-| `CONFIRMADO` | Confirmado por el empleado — dispara email de confirmación |
-| `EN_CURSO` | El turno está en progreso |
-| `FINALIZADO` | Se establece automáticamente cuando pasa la hora de fin (tarea programada) |
-| `CANCELADO` | Cancelado por el cliente o el empleado |
+| `PENDING` | Booked by the client, awaiting employee confirmation |
+| `CONFIRMED` | Confirmed by the employee — triggers confirmation email |
+| `IN_PROGRESS` | The appointment is currently underway |
+| `COMPLETED` | Automatically set when the end time has passed (scheduled task) |
+| `CANCELLED` | Cancelled by the client or the employee |
 
 ---
 
-## 📡 Documentación de la API
+## 📡 API Documentation
 
-> 📖 **Documentación interactiva disponible en** `http://localhost:8080/swagger-ui.html` cuando el servidor está en ejecución.
+> 📖 **Interactive documentation available at** `http://localhost:8080/swagger-ui.html` when the server is running.
 
-### 🔓 Autenticación (`/autenticacion`)
+### 🔓 Authentication (`/auth`)
 
-| Método | Endpoint | Descripción | Auth |
+| Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `POST` | `/autenticacion/cliente` | Registrar un nuevo cliente | 🌐 Público |
-| `POST` | `/autenticacion/dueno` | Registrar un nuevo dueño de negocio | 🌐 Público |
-| `POST` | `/autenticacion/login` | Iniciar sesión — establece cookies HttpOnly | 🌐 Público |
-| `POST` | `/autenticacion/refresh` | Renovar token de acceso mediante cookie | 🔑 Cookie |
+| `POST` | `/auth/client` | Register a new client | 🌐 Public |
+| `POST` | `/auth/owner` | Register a new business owner | 🌐 Public |
+| `POST` | `/auth/login` | Log in — sets HttpOnly cookies | 🌐 Public |
+| `POST` | `/auth/refresh` | Renew access token via cookie | 🔑 Cookie |
 
-### 🌐 Público (`/publico`)
+### 🌐 Public (`/public/shops`)
 
-| Método | Endpoint | Descripción | Auth |
+| Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `GET` | `/publico/locales` | Buscar locales (paginado, con filtros) | 🌐 Público |
-| `GET` | `/publico/locales/{id}` | Obtener detalle del local por ID | 🌐 Público |
-| `GET` | `/publico/locales/imagenes/{id}` | Descargar imagen del local (binario) | 🌐 Público |
-| `GET` | `/publico/locales/{localId}/resenias` | Listar reseñas de un local | 🌐 Público |
-| `GET` | `/publico/locales/{localId}/resenias/promedio` | Obtener calificación promedio | 🌐 Público |
+| `GET` | `/public/shops` | Search shops (paginated, with filters) | 🌐 Public |
+| `GET` | `/public/shops/{id}` | Get shop details by ID | 🌐 Public |
+| `GET` | `/public/shops/images/{id}` | Download shop image (binary) | 🌐 Public |
+| `GET` | `/public/shops/{shopId}/reviews` | List reviews for a shop | 🌐 Public |
+| `GET` | `/public/shops/{shopId}/reviews/average` | Get average rating | 🌐 Public |
 
-### 👤 Cliente (`/cliente`)
+### 👤 Client (`/client`)
 
-| Método | Endpoint | Descripción | Auth |
+| Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `GET` | `/cliente/perfil` | Obtener perfil del cliente actual | 🔐 CLIENTE |
-| `PUT` | `/cliente/perfil` | Actualizar perfil del cliente | 🔐 CLIENTE |
-| `DELETE` | `/cliente/perfil` | Eliminar cuenta del cliente | 🔐 CLIENTE |
-| `POST` | `/cliente/turnos` | Reservar un turno | 🔐 CLIENTE |
-| `GET` | `/cliente/turnos/disponibilidad` | Consultar disponibilidad de slots | 🌐 Público |
-| `GET` | `/cliente/turnos/activos` | Listar turnos activos | 🔐 CLIENTE |
-| `GET` | `/cliente/turnos/historial` | Historial de turnos | 🔐 CLIENTE |
-| `PATCH` | `/cliente/turnos/{turnoId}/cancelar` | Cancelar un turno | 🔐 CLIENTE |
-| `POST` | `/cliente/resenias` | Publicar una reseña | 🔐 CLIENTE |
+| `GET` | `/client/profile` | Get current client profile | 🔐 CLIENT |
+| `PUT` | `/client/profile` | Update client profile | 🔐 CLIENT |
+| `DELETE` | `/client/profile` | Delete client account | 🔐 CLIENT |
+| `POST` | `/client/appointments` | Book an appointment | 🔐 CLIENT |
+| `GET` | `/client/appointments/availability` | Check slot availability | 🌐 Public |
+| `GET` | `/client/appointments/active` | List active appointments | 🔐 CLIENT |
+| `GET` | `/client/appointments/history` | Appointment history | 🔐 CLIENT |
+| `PATCH` | `/client/appointments/{appointmentId}/cancel` | Cancel an appointment | 🔐 CLIENT |
+| `POST` | `/client/reviews` | Publish a review | 🔐 CLIENT |
 
-### 🏢 Dueño del Negocio (`/dueno`)
+### 🏢 Business Owner (`/owner`)
 
-| Método | Endpoint | Descripción | Auth |
+| Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `POST` | `/dueno/local` | Crear local | 🔐 DUENO |
-| `GET` | `/dueno/local` | Obtener local propio | 🔐 DUENO |
-| `PUT` | `/dueno/local` | Actualizar local | 🔐 DUENO |
-| `GET` | `/dueno/local/{id}` | Obtener local por ID | 🔐 DUENO |
-| `POST` | `/dueno/empleados` | Crear empleado (multipart) | 🔐 DUENO |
-| `GET` | `/dueno/empleados` | Listar empleados | 🔐 DUENO |
-| `GET` | `/dueno/empleados/{id}` | Obtener empleado por ID | 🔐 DUENO |
-| `PUT` | `/dueno/empleados/{id}` | Actualizar empleado (multipart) | 🔐 DUENO |
-| `DELETE` | `/dueno/empleados/{id}` | Eliminar empleado | 🔐 DUENO |
-| `POST` | `/dueno/servicios` | Crear servicio | 🔐 DUENO |
-| `GET` | `/dueno/servicios` | Listar servicios | 🔐 DUENO |
-| `GET` | `/dueno/servicios/{id}` | Obtener servicio por ID | 🔐 DUENO |
-| `PUT` | `/dueno/servicios/{id}` | Actualizar servicio | 🔐 DUENO |
-| `DELETE` | `/dueno/servicios/{id}` | Eliminar servicio | 🔐 DUENO |
-| `POST` | `/dueno/horarios` | Crear horario del local | 🔐 DUENO |
-| `GET` | `/dueno/horarios` | Listar horarios del local | 🔐 DUENO |
-| `GET` | `/dueno/horarios/{id}` | Obtener horario por ID | 🔐 DUENO |
-| `PUT` | `/dueno/horarios/{id}` | Actualizar horario del local | 🔐 DUENO |
-| `DELETE` | `/dueno/horarios/{id}` | Eliminar horario del local | 🔐 DUENO |
-| `POST` | `/dueno/local/imagenes` | Subir imágenes del local (multipart) | 🔐 DUENO |
-| `GET` | `/dueno/local/imagenes` | Listar imágenes del local | 🔐 DUENO |
-| `PATCH` | `/dueno/local/imagenes` | Edición parcial (agregar/eliminar imágenes) | 🔐 DUENO |
-| `GET` | `/dueno/local/imagenes/{id}/archivo` | Descargar archivo de imagen | 🌐 Público |
+| `POST` | `/owner/shop` | Create shop | 🔐 OWNER |
+| `GET` | `/owner/shop` | Get own shop | 🔐 OWNER |
+| `PUT` | `/owner/shop` | Update shop | 🔐 OWNER |
+| `GET` | `/owner/shop/{id}` | Get shop by ID | 🔐 OWNER |
+| `POST` | `/owner/employees` | Create employee (multipart) | 🔐 OWNER |
+| `GET` | `/owner/employees` | List employees | 🔐 OWNER |
+| `GET` | `/owner/employees/{employeeId}` | Get employee by ID | 🔐 OWNER |
+| `PUT` | `/owner/employees/{employeeId}` | Update employee (multipart) | 🔐 OWNER |
+| `DELETE` | `/owner/employees/{employeeId}` | Delete employee | 🔐 OWNER |
+| `POST` | `/owner/services` | Create service | 🔐 OWNER |
+| `GET` | `/owner/services` | List services | 🔐 OWNER |
+| `GET` | `/owner/services/{id}` | Get service by ID | 🔐 OWNER |
+| `PUT` | `/owner/services/{id}` | Update service | 🔐 OWNER |
+| `DELETE` | `/owner/services/{id}` | Delete service | 🔐 OWNER |
+| `POST` | `/owner/schedules` | Create shop schedule | 🔐 OWNER |
+| `GET` | `/owner/schedules` | List shop schedules | 🔐 OWNER |
+| `GET` | `/owner/schedules/{id}` | Get schedule by ID | 🔐 OWNER |
+| `PUT` | `/owner/schedules/{id}` | Update shop schedule | 🔐 OWNER |
+| `DELETE` | `/owner/schedules/{id}` | Delete shop schedule | 🔐 OWNER |
+| `POST` | `/owner/shop/images` | Upload shop images (multipart) | 🔐 OWNER |
+| `GET` | `/owner/shop/images` | List shop images | 🔐 OWNER |
+| `PATCH` | `/owner/shop/images` | Partial edit (add/remove images) | 🔐 OWNER |
+| `GET` | `/owner/shop/images/{imageId}/file` | Download image file | 🌐 Public |
 
-### 👨‍💼 Empleado (`/empleado`)
+### 👨‍💼 Employee (`/employee`)
 
-| Método | Endpoint | Descripción | Auth |
+| Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `POST` | `/empleado/agenda` | Crear turno sin reserva previa (walk-in) | 🔐 EMPLEADO |
-| `GET` | `/empleado/agenda/disponibilidad` | Consultar disponibilidad propia | 🔐 EMPLEADO |
-| `GET` | `/empleado/agenda/mis-servicios` | Listar servicios disponibles | 🔐 EMPLEADO |
-| `GET` | `/empleado/turnos/confirmados` | Listar turnos confirmados | 🔐 EMPLEADO |
-| `GET` | `/empleado/turnos/pendientes` | Listar turnos pendientes | 🔐 EMPLEADO |
-| `GET` | `/empleado/turnos/historial` | Historial de turnos | 🔐 EMPLEADO |
-| `PATCH` | `/empleado/turnos/{id}/confirmar` | Confirmar turno → envía email | 🔐 EMPLEADO |
-| `PATCH` | `/empleado/turnos/{id}/cancelar` | Cancelar turno | 🔐 EMPLEADO |
-| `POST` | `/empleado/horarios` | Crear horario propio | 🔐 EMPLEADO |
-| `GET` | `/empleado/horarios` | Listar horarios propios | 🔐 EMPLEADO |
-| `GET` | `/empleado/horarios/{id}` | Obtener horario por ID | 🔐 EMPLEADO |
-| `PUT` | `/empleado/horarios/{id}` | Actualizar horario propio | 🔐 EMPLEADO |
-| `DELETE` | `/empleado/horarios/{id}` | Eliminar horario propio | 🔐 EMPLEADO |
-| `GET` | `/empleado/estadisticas/ganancias` | Ingresos por rango de fechas | 🔐 EMPLEADO |
+| `POST` | `/employee/agenda` | Create walk-in appointment (no prior booking) | 🔐 EMPLOYEE |
+| `GET` | `/employee/agenda/availability` | Check own availability | 🔐 EMPLOYEE |
+| `GET` | `/employee/agenda/my-services` | List available services | 🔐 EMPLOYEE |
+| `GET` | `/employee/appointments/confirmed` | List confirmed appointments | 🔐 EMPLOYEE |
+| `GET` | `/employee/appointments/pending` | List pending appointments | 🔐 EMPLOYEE |
+| `GET` | `/employee/appointments/history` | Appointment history | 🔐 EMPLOYEE |
+| `PATCH` | `/employee/appointments/{appointmentId}/confirm` | Confirm appointment → sends email | 🔐 EMPLOYEE |
+| `PATCH` | `/employee/appointments/{appointmentId}/cancel` | Cancel appointment | 🔐 EMPLOYEE |
+| `POST` | `/employee/schedules` | Create own schedule | 🔐 EMPLOYEE |
+| `GET` | `/employee/schedules` | List own schedules | 🔐 EMPLOYEE |
+| `GET` | `/employee/schedules/{id}` | Get schedule by ID | 🔐 EMPLOYEE |
+| `PUT` | `/employee/schedules/{id}` | Update own schedule | 🔐 EMPLOYEE |
+| `DELETE` | `/employee/schedules/{id}` | Delete own schedule | 🔐 EMPLOYEE |
+| `GET` | `/employee/stats/earnings` | Earnings by date range | 🔐 EMPLOYEE |
 
 ---
 
-## 🚀 Instalación y Configuración
+## 🚀 Installation & Setup
 
-### Requisitos Previos
+### Prerequisites
 
 - **Java 21** (JDK)
-- **PostgreSQL** 14+ (instancia en ejecución)
-- **Maven 3.8+** (o utilizar el wrapper `mvnw` incluido)
-- **Credenciales SMTP** (se recomienda Contraseña de Aplicación de Gmail para las funcionalidades de email)
+- **PostgreSQL** 14+ (running instance)
+- **Maven 3.8+** (or use the included `mvnw` wrapper)
+- **SMTP Credentials** (Gmail App Password recommended for email features)
 
-### 1. Clonar el Repositorio
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<tu-usuario>/sistematunos-back.git
+git clone https://github.com/<your-username>/sistematunos-back.git
 cd sistematunos-back
 ```
 
-### 2. Configurar la Base de Datos
+### 2. Configure the Database
 
-Crear una base de datos en PostgreSQL:
+Create a PostgreSQL database:
 
 ```sql
 CREATE DATABASE tuturno_db;
 ```
 
-### 3. Configurar `application.properties`
+### 3. Configure `application.properties`
 
-Crear o actualizar el archivo `src/main/resources/application.properties`:
+Create or update the file `src/main/resources/application.properties`:
 
 ```properties
-# ── Servidor ────────────────────────────────────────────
+# ── Server ──────────────────────────────────────────────
 server.port=8080
 
-# ── Base de Datos ───────────────────────────────────────
+# ── Database ────────────────────────────────────────────
 spring.datasource.url=jdbc:postgresql://localhost:5432/tuturno_db
-spring.datasource.username=tu_usuario_db
-spring.datasource.password=tu_contraseña_db
+spring.datasource.username=your_db_username
+spring.datasource.password=your_db_password
 
 # ── JPA / Hibernate ────────────────────────────────────
 spring.jpa.hibernate.ddl-auto=update
@@ -447,7 +447,7 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 # ── JWT ─────────────────────────────────────────────────
-jwt.secret=tu_clave_secreta_en_base64_minimo_256_bits
+jwt.secret=your_base64_secret_key_minimum_256_bits
 jwt.expiration=900000
 
 # ── Refresh Token ───────────────────────────────────────
@@ -456,21 +456,21 @@ refresh.token.duration=604800000
 # ── Email (SMTP) ────────────────────────────────────────
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=tu_email@gmail.com
-spring.mail.password=tu_contraseña_de_aplicacion
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
-# ── Subida de Archivos ─────────────────────────────────
+# ── File Upload ─────────────────────────────────────────
 spring.servlet.multipart.max-file-size=5MB
 spring.servlet.multipart.max-request-size=20MB
 ```
 
 ---
 
-## ▶️ Ejecución del Proyecto
+## ▶️ Running the Project
 
-### Usando Maven Wrapper (recomendado)
+### Using Maven Wrapper (recommended)
 
 ```bash
 # Linux / macOS
@@ -480,72 +480,72 @@ spring.servlet.multipart.max-request-size=20MB
 mvnw.cmd spring-boot:run
 ```
 
-### Usando Maven global
+### Using global Maven
 
 ```bash
 mvn spring-boot:run
 ```
 
-### Generar un JAR ejecutable
+### Build an executable JAR
 
 ```bash
 ./mvnw clean package -DskipTests
 java -jar target/sistematunos-back-0.0.1-SNAPSHOT.jar
 ```
 
-El servidor se iniciará en `http://localhost:8080`.
+The server will start at `http://localhost:8080`.
 
 **Swagger UI:** [`http://localhost:8080/swagger-ui.html`](http://localhost:8080/swagger-ui.html)
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 sistematunos-back/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/gaston/sistema/turno/sistematunos_back/
-│   │   │   ├── SistematunosBackApplication.java     # Punto de entrada (@EnableScheduling, @EnableAsync)
+│   │   │   ├── SistematunosBackApplication.java       # Entry point (@EnableScheduling, @EnableAsync)
 │   │   │   ├── configuration/
-│   │   │   │   └── OpenApiConfig.java               # Configuración de Swagger/OpenAPI
-│   │   │   ├── controllers/                         # 14 controladores REST
-│   │   │   │   ├── AuthController.java              # Registro e inicio de sesión
-│   │   │   │   ├── TurnoClienteController.java      # Operaciones de turnos del cliente
-│   │   │   │   ├── TurnoGestionEmpleadoController.java  # Gestión de turnos del empleado
-│   │   │   │   ├── AgendaEmpleadoController.java    # Agenda y walk-ins del empleado
-│   │   │   │   ├── LocalController.java             # CRUD del local (dueño)
-│   │   │   │   ├── EmpleadoController.java          # CRUD de empleados (dueño)
-│   │   │   │   ├── ServicioLocalController.java     # CRUD de servicios (dueño)
-│   │   │   │   ├── HorarioLocalController.java      # Horarios del local (dueño)
-│   │   │   │   ├── HorarioEmpleadoController.java   # Horarios del empleado
-│   │   │   │   ├── ImagenLocalController.java       # Gestión de imágenes (dueño)
-│   │   │   │   ├── PublicoLocalController.java      # Descubrimiento público de locales
-│   │   │   │   ├── ClienteController.java           # Perfil del cliente
-│   │   │   │   ├── ReseniaController.java           # Reseñas
-│   │   │   │   └── EstadisticaEmpleadoController.java  # Estadísticas del empleado
-│   │   │   ├── dto/                                 # 15 Objetos de Transferencia de Datos
-│   │   │   ├── entities/                            # 13 Entidades JPA + Enums
-│   │   │   ├── repositories/                        # 11 Repositorios de Spring Data
-│   │   │   ├── security/                            # Filtro JWT, configuración, UserPrincipal
-│   │   │   ├── services/                            # 26 archivos de servicio (interfaces + impl)
-│   │   │   └── validation/                          # Excepciones personalizadas + GlobalExceptionHandler
+│   │   │   │   └── OpenApiConfig.java                 # Swagger/OpenAPI configuration
+│   │   │   ├── controllers/                           # 14 REST controllers
+│   │   │   │   ├── AuthController.java                # Registration & login
+│   │   │   │   ├── ClientAppointmentController.java   # Client appointment operations
+│   │   │   │   ├── EmployeeAppointmentController.java # Employee appointment management
+│   │   │   │   ├── EmployeeAgendaController.java      # Employee agenda & walk-ins
+│   │   │   │   ├── ShopController.java                # Shop CRUD (owner)
+│   │   │   │   ├── EmployeeController.java            # Employee CRUD (owner)
+│   │   │   │   ├── ShopOfferingController.java        # Service CRUD (owner)
+│   │   │   │   ├── ShopScheduleController.java        # Shop schedules (owner)
+│   │   │   │   ├── EmployeeScheduleController.java    # Employee schedules
+│   │   │   │   ├── ShopImageController.java           # Image management (owner)
+│   │   │   │   ├── PublicShopController.java          # Public shop discovery
+│   │   │   │   ├── ClientController.java              # Client profile
+│   │   │   │   ├── ReviewController.java              # Reviews
+│   │   │   │   └── EmployeeStatsController.java       # Employee statistics
+│   │   │   ├── dto/                                   # 15 Data Transfer Objects
+│   │   │   ├── entities/                              # 13 JPA Entities + Enums
+│   │   │   ├── repositories/                          # 11 Spring Data Repositories
+│   │   │   ├── security/                              # JWT Filter, config, UserPrincipal
+│   │   │   ├── services/                              # 26 service files (interfaces + impl)
+│   │   │   └── validation/                            # Custom exceptions + GlobalExceptionHandler
 │   │   └── resources/
-│   │       └── application.properties               # Configuración (en .gitignore)
-│   └── test/                                        # Tests unitarios
-├── pom.xml                                          # Dependencias Maven
-├── mvnw / mvnw.cmd                                  # Maven Wrapper
+│   │       └── application.properties                 # Configuration (in .gitignore)
+│   └── test/                                          # Unit tests
+├── pom.xml                                            # Maven dependencies
+├── mvnw / mvnw.cmd                                    # Maven Wrapper
 └── README.md
 ```
 
 ---
 
-## 👤 Autor
+## 👤 Author
 
 **Gastón Olartes**
 
 ---
 
 <p align="center">
-  <sub>Construido con ☕ Java y Spring Boot</sub>
+  <sub>Built with ☕ Java and Spring Boot</sub>
 </p>
