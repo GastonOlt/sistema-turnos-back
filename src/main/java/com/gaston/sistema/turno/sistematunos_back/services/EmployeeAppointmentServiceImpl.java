@@ -33,7 +33,7 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentEmployeeDTO> listPendingAppointments(Long employeeId) {
-        return appointmentRepository.findByEmployeeIdAndStatus(employeeId, AppointmentStatus.PENDING).stream()
+        return appointmentRepository.findByEmployeeIdAndStatusWithRelations(employeeId, AppointmentStatus.PENDING).stream()
                .map(this::convertToDTO)
                .collect(Collectors.toList());
     }
@@ -41,7 +41,7 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentEmployeeDTO> listConfirmedAppointments(Long employeeId) {
-        return appointmentRepository.findByEmployeeIdAndStatus(employeeId, AppointmentStatus.CONFIRMED).stream()
+        return appointmentRepository.findByEmployeeIdAndStatusWithRelations(employeeId, AppointmentStatus.CONFIRMED).stream()
                .map(this::convertToDTO)
                .collect(Collectors.toList());
     }
@@ -49,7 +49,7 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentEmployeeDTO> appointmentHistory(Long employeeId) {
-        return appointmentRepository.findByEmployeeIdAndStatus(employeeId, AppointmentStatus.COMPLETED).stream()
+        return appointmentRepository.findByEmployeeIdAndStatusWithRelations(employeeId, AppointmentStatus.COMPLETED).stream()
                .map(this::convertToDTO)
                .collect(Collectors.toList());
     }
@@ -57,11 +57,12 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
     @Override
     @Transactional
     public void cancelAppointment(Long employeeId, Long appointmentId) {
-        Employee employee = employeeService.getEmployeeEntity(employeeId);
-        Appointment appointment = employee.getAppointments().stream()
-        .filter(a -> a.getId().equals(appointmentId))
-        .findFirst()
-        .orElseThrow(()->new IllegalArgumentException("no se encontro el turno"));
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+
+        if (!appointment.getEmployee().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("This appointment does not belong to this employee");
+        }
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
@@ -70,15 +71,16 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
     @Override
     @Transactional
     public void confirmAppointment(Long employeeId, Long appointmentId) {
-        Employee employee = employeeService.getEmployeeEntity(employeeId);
-        Appointment appointment = employee.getAppointments().stream()
-        .filter(a -> a.getId().equals(appointmentId))
-        .findFirst()
-        .orElseThrow(()->new IllegalArgumentException("no se encontro el turno"));
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+
+        if (!appointment.getEmployee().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("This appointment does not belong to this employee");
+        }
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointmentRepository.save(appointment);
-       try {
+        try {
             if (appointment.getClient() != null) {
                 emailService.sendAppointmentConfirmation(
                     appointment.getClient().getEmail(),
@@ -90,7 +92,7 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
                 );
             }
         } catch (Exception e) {
-            System.err.println("No se pudo enviar el correo: " + e.getMessage());
+            System.err.println("Could not send confirmation email: " + e.getMessage());
         }
     }
 
@@ -107,11 +109,11 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
         LocalDateTime startDate = from.atStartOfDay();
         LocalDateTime endDate = to.atTime(23, 59);
 
-        List<Appointment> appointments = appointmentRepository.findByEmployeeIdAndStatusAndStartDateTimeBetween(
+        List<Appointment> appointments = appointmentRepository.findByEmployeeIdAndStatusAndDateRangeWithService(
                 employeeId, AppointmentStatus.COMPLETED, startDate, endDate);
 
         int totalSum = 0;
-        for(Appointment appointment : appointments){
+        for (Appointment appointment : appointments) {
             totalSum += appointment.getService().getPrice();
         }
 

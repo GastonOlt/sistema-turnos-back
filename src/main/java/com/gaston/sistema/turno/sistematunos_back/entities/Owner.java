@@ -3,6 +3,7 @@ package com.gaston.sistema.turno.sistematunos_back.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -11,7 +12,7 @@ import jakarta.persistence.Table;
 @Table(name = "owner")
 public class Owner extends User {
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id")
     @JsonIgnore
     private Shop shop;

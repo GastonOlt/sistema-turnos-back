@@ -3,6 +3,7 @@ package com.gaston.sistema.turno.sistematunos_back.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -49,22 +50,27 @@ public class Shop {
     private Owner owner;
 
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<ShopImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
+    @BatchSize(size = 20)
     private List<Schedule> schedules = new ArrayList<>();
 
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<Employee> employees = new ArrayList<>();
 
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<ShopOffering> services = new ArrayList<>();
 
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<Appointment> appointments = new ArrayList<>();
 
     public void updateShopData(Shop shop) {

@@ -11,4 +11,5 @@ import com.gaston.sistema.turno.sistematunos_back.entities.ShopImage;
 public interface ShopImageRepository extends JpaRepository<ShopImage, Long> {
     void deleteAllByIdIn(List<Long> ids);
     List<ShopImage> findByShopId(Long shopId);
+    long countByShopId(Long shopId);
 }

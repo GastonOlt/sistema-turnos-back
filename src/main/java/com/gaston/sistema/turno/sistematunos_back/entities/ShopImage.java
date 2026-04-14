@@ -11,6 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Basic;
 
 
 @Entity
@@ -27,10 +29,11 @@ public class ShopImage {
     @Column(name = "file_type")
     private String fileType;
 
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "image_data", columnDefinition = "BYTEA")
     private byte[] imageData;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id")
     @JsonIgnore
     private Shop shop;

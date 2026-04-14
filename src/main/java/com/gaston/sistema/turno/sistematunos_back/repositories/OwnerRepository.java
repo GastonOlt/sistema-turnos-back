@@ -11,6 +11,6 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Owner;
 @Repository
 public interface OwnerRepository extends JpaRepository<Owner, Long> {
 
-    @Query("Select u From User u Where u.email = ?1")
+    @Query("SELECT o FROM Owner o WHERE o.email = ?1")
     Optional<Owner> findByEmail(String email);
 }

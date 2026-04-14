@@ -26,19 +26,18 @@ public class ShopImageServiceImpl implements ShopImageService {
     @Override
     @Transactional
     public List<ShopImage> saveImages(Long ownerId, MultipartFile[] files) {
-        List<ShopImage> savedImages = new ArrayList<>();
         Shop shopDb = shopService.getByOwner(ownerId);
         validateImageLimit(shopDb, files.length);
 
-        for(MultipartFile file : files){
+        List<ShopImage> images = new ArrayList<>();
+        for (MultipartFile file : files) {
             try {
-                ShopImage image = createImageEntity(file, shopDb);
-                savedImages.add(imageRepository.save(image));
-            } catch (IOException  e) {
-                throw new IllegalArgumentException("Error al procesar la imagen "+file.getOriginalFilename() ,e);
+                images.add(createImageEntity(file, shopDb));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Error al procesar la imagen " + file.getOriginalFilename(), e);
             }
         }
-        return savedImages;
+        return imageRepository.saveAll(images);
     }
 
     @Override
@@ -89,9 +88,10 @@ public class ShopImageServiceImpl implements ShopImageService {
     }
 
     private void validateImageLimit(Shop shop, int newCount) {
-        int current = shop.getImages().size();
+        long current = imageRepository.countByShopId(shop.getId());
         if (current + newCount > 5) {
-            throw new IllegalArgumentException("No se pueden tener más de 5 imágenes. Actualmente tienes " + current + " y quieres agregar " + newCount);
+            throw new IllegalArgumentException(
+                "No se pueden tener más de 5 imágenes. Actualmente tienes " + current + " y quieres agregar " + newCount);
         }
     }
 

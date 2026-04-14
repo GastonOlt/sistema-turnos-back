@@ -39,7 +39,7 @@ public class EmployeeServiceImpl implements EmployeeService {
            }
 
            Shop shopDb = shopService.getByOwner(ownerId);
-           if(shopDb.getEmployees().size() >= 5){
+           if (employeeRepository.countByShopId(shopDb.getId()) >= 5) {
               throw new IllegalArgumentException("No puedes tener mas de 5 empleados");
            }
 

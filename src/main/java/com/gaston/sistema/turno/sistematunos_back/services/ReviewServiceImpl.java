@@ -72,7 +72,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<ReviewResponseDTO> getReviewsByShop(Long shopId) {
-        return reviewRepository.findByShopIdOrderByLastModifiedDateDesc(shopId).stream()
+        return reviewRepository.findByShopIdWithRelations(shopId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -90,9 +90,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         newAverage = Math.round(newAverage * 10.0) / 10.0;
 
-        Shop shop = shopRepository.findById(shopId).orElseThrow();
-        shop.setAverageRating(newAverage);
-        shopRepository.save(shop);
+        shopRepository.updateAverageRating(shopId, newAverage);
     }
 
     private ReviewResponseDTO convertToDTO(Review r) {

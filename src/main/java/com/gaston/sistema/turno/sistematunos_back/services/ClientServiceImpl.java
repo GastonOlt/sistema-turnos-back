@@ -2,6 +2,7 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -91,18 +92,26 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentClientDTO> getActiveAppointments(Long clientId) {
-       return appointmentRepository.findActiveClientAppointments(clientId, LocalDateTime.now())
+       return appointmentRepository.findActiveClientAppointmentsWithRelations(clientId, LocalDateTime.now())
                 .stream()
-                .map(this::convertToAppointmentClientDTO)
+                .map(a -> convertToAppointmentClientDTO(a, null))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentClientDTO> getAppointmentHistory(Long clientId) {
-      return appointmentRepository.findClientHistory(clientId, LocalDateTime.now())
+        List<Appointment> appointments = appointmentRepository.findClientHistoryWithRelations(
+                clientId, LocalDateTime.now());
+
+        // Load all reviews for this batch in a single query — eliminates N+1
+        List<Long> appointmentIds = appointments.stream().map(Appointment::getId).toList();
+        Map<Long, Review> reviewsByAppointment = reviewRepository.findByAppointmentIdIn(appointmentIds)
                 .stream()
-                .map(this::convertToAppointmentClientDTO)
+                .collect(Collectors.toMap(r -> r.getAppointment().getId(), r -> r));
+
+        return appointments.stream()
+                .map(a -> convertToAppointmentClientDTO(a, reviewsByAppointment.get(a.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -129,7 +138,7 @@ public class ClientServiceImpl implements ClientService {
         return dto;
     }
 
-    private AppointmentClientDTO convertToAppointmentClientDTO(Appointment appointment) {
+    private AppointmentClientDTO convertToAppointmentClientDTO(Appointment appointment, Review review) {
         AppointmentClientDTO dto = new AppointmentClientDTO();
         dto.setId(appointment.getId());
         dto.setStartDateTime(appointment.getStartDateTime());
@@ -146,10 +155,9 @@ public class ClientServiceImpl implements ClientService {
             dto.setPrice(appointment.getService().getPrice());
         }
 
-        Optional<Review> review = reviewRepository.findByAppointmentId(appointment.getId());
-        if (review.isPresent()) {
-            dto.setRating(review.get().getRating());
-            dto.setComment(review.get().getComment());
+        if (review != null) {
+            dto.setRating(review.getRating());
+            dto.setComment(review.getComment());
         }
 
         return dto;

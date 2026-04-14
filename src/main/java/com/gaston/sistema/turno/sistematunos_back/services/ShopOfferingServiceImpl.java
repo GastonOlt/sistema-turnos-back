@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.entities.ShopOffering;
@@ -21,6 +22,7 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
     }
 
     @Override
+    @Transactional
     public ShopOffering createService(ShopOffering service, Long ownerId) {
             Shop shopDb = shopService.getByOwner(ownerId);
             service.setShop(shopDb);
@@ -30,6 +32,7 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
     }
 
     @Override
+    @Transactional
     public ShopOffering editService(ShopOffering service, Long serviceId, Long ownerId) {
             ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
                                          new IllegalArgumentException("error al encontar el servicio con id: "+serviceId));
@@ -45,6 +48,7 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ShopOffering getService(Long serviceId, Long ownerId) {
         ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
                                 new IllegalArgumentException("error al encontar el servicio con id: "+serviceId));
@@ -56,10 +60,10 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ShopOffering> getServices(Long ownerId) {
          Shop shopDb = shopService.getByOwner(ownerId);
-         List<ShopOffering> services = shopDb.getServices();
-         return services;
+         return shopOfferingRepository.findByShopId(shopDb.getId());
     }
 
     @Override
@@ -73,6 +77,7 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ShopOffering getServiceEntity(Long serviceId) {
            ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
                                 new IllegalArgumentException("error al encontar el servicio con id: "+serviceId));

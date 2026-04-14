@@ -12,8 +12,10 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    @Query("Select u From User u where u.email = ?1")
+    @Query("SELECT e FROM Employee e WHERE e.email = ?1")
     Optional<Employee> findByEmail(String email);
 
     List<Employee> findByShopId(Long shopId);
+
+    long countByShopId(Long shopId);
 }

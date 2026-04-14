@@ -54,7 +54,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Transactional(readOnly = true)
     public List<Schedule> getSchedules(Long ownerId) {
         Shop shopDb = shopService.getByOwner(ownerId);
-        return shopDb.getSchedules();
+        return scheduleRepository.findByShopId(shopDb.getId());
     }
 
     @Override
@@ -120,8 +120,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional(readOnly = true)
     public List<Schedule> getBarberSchedules(Long employeeId) {
-            Employee employeeDb = employeeService.getEmployeeEntity(employeeId);
-            return employeeDb.getSchedules();
+            return scheduleRepository.findByEmployeeId(employeeId);
     }
 
     @Override

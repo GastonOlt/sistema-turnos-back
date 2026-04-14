@@ -29,10 +29,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final ClientService clientService;
     private final EmailService emailService;
     private final AvailabilityCalculatorService availabilityCalculatorService;
+    private final com.gaston.sistema.turno.sistematunos_back.repositories.ShopRepository shopRepository;
+    private final com.gaston.sistema.turno.sistematunos_back.repositories.ClientRepository clientRepository;
 
     public AppointmentServiceImpl(AppointmentRepository appointmentRepository, EmployeeService employeeService,
             ShopOfferingService shopOfferingService, ShopService shopService, ClientService clientService,
-            EmailService emailService, AvailabilityCalculatorService availabilityCalculatorService) {
+            EmailService emailService, AvailabilityCalculatorService availabilityCalculatorService,
+            com.gaston.sistema.turno.sistematunos_back.repositories.ShopRepository shopRepository,
+            com.gaston.sistema.turno.sistematunos_back.repositories.ClientRepository clientRepository) {
         this.appointmentRepository = appointmentRepository;
         this.employeeService = employeeService;
         this.shopOfferingService = shopOfferingService;
@@ -40,6 +44,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         this.clientService = clientService;
         this.emailService = emailService;
         this.availabilityCalculatorService = availabilityCalculatorService;
+        this.shopRepository = shopRepository;
+        this.clientRepository = clientRepository;
     }
 
     @Override
@@ -52,10 +58,18 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
         Employee employeeDb = employeeService.getEmployeeEntity(request.getEmployeeId());
         ShopOffering serviceDb = shopOfferingService.getServiceEntity(request.getServiceId());
-        Shop shopDb = shopService.getShopById(request.getShopId());
-        Client clientDb = clientService.getById(clientId);
 
-        validateShopConsistency(employeeDb, serviceDb, shopDb);
+        Long shopId = request.getShopId();
+        if (!employeeDb.getShop().getId().equals(shopId)) {
+            throw new RuntimeException("El empleado no pertenece a este local");
+        }
+        if (!serviceDb.getShop().getId().equals(shopId)) {
+            throw new RuntimeException("El servicio no pertenece a este local");
+        }
+
+        // Use JPA proxy to avoid extra SELECT queries just for foreign keys
+        Shop shopRef = shopRepository.getReferenceById(shopId);
+        Client clientRef = clientRepository.getReferenceById(clientId);
 
         LocalDateTime startDateTime = request.getStartDateTime();
 
@@ -70,7 +84,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 throw new RuntimeException("El empleado no está disponible en ese horario");
         }
 
-        Appointment appointment = createAppointmentEntity(clientDb, employeeDb, serviceDb, shopDb, startDateTime, endDateTime, AppointmentStatus.PENDING);
+        Appointment appointment = createAppointmentEntity(clientRef, employeeDb, serviceDb, shopRef, startDateTime, endDateTime, AppointmentStatus.PENDING);
         Appointment newAppointment = appointmentRepository.save(appointment);
 
         return convertToDTO(newAppointment);
@@ -140,7 +154,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(23,59);
 
-        List<Appointment> todayAppointments = appointmentRepository.findByStatusAndStartDateTimeBetween(AppointmentStatus.CONFIRMED, startOfDay, endOfDay);
+        List<Appointment> todayAppointments = appointmentRepository.findByStatusAndDateRangeWithRelations(AppointmentStatus.CONFIRMED, startOfDay, endOfDay);
 
             for (Appointment appointment : todayAppointments) {
                 try {
@@ -158,6 +172,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
     }
 
+    // Method kept for other usages if needed, though removed from bookAppointment
     private void validateShopConsistency(Employee e, ShopOffering s, Shop shop) {
         if (!e.getShop().getId().equals(shop.getId())) {
             throw new RuntimeException("El empleado no pertenece a este local");

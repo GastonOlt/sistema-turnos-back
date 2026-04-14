@@ -16,39 +16,76 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
        boolean existsByClientIdAndStatus(Long clientId, AppointmentStatus status);
        boolean existsByClientIdAndStatusIn(Long clientId, List<AppointmentStatus> status);
-       List<Appointment> findByEmployeeIdAndStatusIn(Long employeeId, List<AppointmentStatus> statuses);
-       List<Appointment> findByEmployeeIdAndStatus(Long employeeId, AppointmentStatus status);
 
        List<Appointment> findAllByStatusAndEndDateTimeBefore(AppointmentStatus status, LocalDateTime date);
 
-       List<Appointment> findByEmployeeIdAndStatusAndStartDateTimeBetween(Long employeeId, AppointmentStatus status,
-                     LocalDateTime start, LocalDateTime end);
-
-       List<Appointment> findByStatusAndStartDateTimeBetween(AppointmentStatus status, LocalDateTime start, LocalDateTime end);
-
-       @Query("SELECT t FROM Appointment t WHERE t.employee.id = :employeeId " +
-                     "AND t.status NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED) " +
-                     "AND t.startDateTime BETWEEN :start AND :end")
+       // ─── Availability check ───────────────────────────────────────────────────
+       @Query("SELECT a FROM Appointment a WHERE a.employee.id = :employeeId " +
+                     "AND a.status NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED) " +
+                     "AND a.startDateTime BETWEEN :start AND :end")
        List<Appointment> findActiveAppointmentsByDate(@Param("employeeId") Long employeeId,
                      @Param("start") LocalDateTime start,
                      @Param("end") LocalDateTime end);
 
-       @Query("SELECT COUNT(t) > 0 FROM Appointment t WHERE t.employee.id = :employeeId AND " +
-                     "t.status NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED) AND " +
-                     "((t.startDateTime < :end AND t.endDateTime > :start))")
+       @Query("SELECT COUNT(a) > 0 FROM Appointment a WHERE a.employee.id = :employeeId AND " +
+                     "a.status NOT IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED) AND " +
+                     "((a.startDateTime < :end AND a.endDateTime > :start))")
        boolean existsByEmployeeAndOverlappingSchedule(@Param("employeeId") Long employeeId,
                      @Param("start") LocalDateTime start,
                      @Param("end") LocalDateTime end);
 
-       @Query("SELECT t FROM Appointment t WHERE t.client.id = :clientId " +
-                     "AND t.startDateTime > :currentDate " +
-                     "AND t.status IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CONFIRMED, com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.PENDING)")
-       List<Appointment> findActiveClientAppointments(@Param("clientId") Long clientId,
-                     @Param("currentDate") LocalDateTime currentDate);
+       // ─── Employee appointment listings (client + service pre-loaded) ──────────
+       @Query("SELECT a FROM Appointment a " +
+              "JOIN FETCH a.client " +
+              "JOIN FETCH a.service " +
+              "WHERE a.employee.id = :employeeId AND a.status = :status")
+       List<Appointment> findByEmployeeIdAndStatusWithRelations(
+              @Param("employeeId") Long employeeId,
+              @Param("status") AppointmentStatus status);
 
-       @Query("SELECT t FROM Appointment t WHERE t.client.id = :clientId " +
-                     "AND (t.startDateTime < :currentDate " +
-                     "OR t.status IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED))")
-       List<Appointment> findClientHistory(@Param("clientId") Long clientId,
-                     @Param("currentDate") LocalDateTime currentDate);
+       // ─── Employee earnings (only service.price needed) ────────────────────────
+       @Query("SELECT a FROM Appointment a " +
+              "JOIN FETCH a.service " +
+              "WHERE a.employee.id = :employeeId AND a.status = :status " +
+              "AND a.startDateTime BETWEEN :start AND :end")
+       List<Appointment> findByEmployeeIdAndStatusAndDateRangeWithService(
+              @Param("employeeId") Long employeeId,
+              @Param("status") AppointmentStatus status,
+              @Param("start") LocalDateTime start,
+              @Param("end") LocalDateTime end);
+
+       // ─── Client active appointments (shop + service pre-loaded) ──────────────
+       @Query("SELECT a FROM Appointment a " +
+              "JOIN FETCH a.shop " +
+              "JOIN FETCH a.service " +
+              "WHERE a.client.id = :clientId " +
+              "AND a.startDateTime > :currentDate " +
+              "AND a.status IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CONFIRMED, " +
+              "com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.PENDING)")
+       List<Appointment> findActiveClientAppointmentsWithRelations(
+              @Param("clientId") Long clientId,
+              @Param("currentDate") LocalDateTime currentDate);
+
+       // ─── Client history (shop + service pre-loaded) ───────────────────────────
+       @Query("SELECT a FROM Appointment a " +
+              "JOIN FETCH a.shop " +
+              "JOIN FETCH a.service " +
+              "WHERE a.client.id = :clientId " +
+              "AND (a.startDateTime < :currentDate " +
+              "OR a.status IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, " +
+              "com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED))")
+       List<Appointment> findClientHistoryWithRelations(
+              @Param("clientId") Long clientId,
+              @Param("currentDate") LocalDateTime currentDate);
+
+       // ─── Email reminder (client + service + shop pre-loaded) ─────────────────
+       @Query("SELECT a FROM Appointment a " +
+              "JOIN FETCH a.client " +
+              "JOIN FETCH a.service " +
+              "JOIN FETCH a.shop " +
+              "WHERE a.status = :status AND a.startDateTime BETWEEN :start AND :end")
+       List<Appointment> findByStatusAndDateRangeWithRelations(
+              @Param("status") AppointmentStatus status,
+              @Param("start") LocalDateTime start,
+              @Param("end") LocalDateTime end);
 }

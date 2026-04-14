@@ -35,9 +35,9 @@ public class PublicShopController {
 
     @GetMapping("{id}")
     @SecurityRequirements()
-    public ResponseEntity<Shop> getShopById(@PathVariable Long id) {
-            Shop shopDb = shopService.getShopById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(shopDb);
+    public ResponseEntity<ShopDTO> getShopById(@PathVariable Long id) {
+        Shop shopDb = shopService.getShopById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ShopDTO(shopDb));
     }
 
     @GetMapping
