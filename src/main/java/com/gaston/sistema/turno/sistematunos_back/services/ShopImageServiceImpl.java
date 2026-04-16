@@ -17,10 +17,12 @@ public class ShopImageServiceImpl implements ShopImageService {
 
     private final ShopImageRepository imageRepository;
     private final ShopService shopService;
+    private final CloudinaryService cloudinaryService;
 
-    public ShopImageServiceImpl(ShopImageRepository imageRepository, ShopService shopService) {
+    public ShopImageServiceImpl(ShopImageRepository imageRepository, ShopService shopService, CloudinaryService cloudinaryService) {
         this.imageRepository = imageRepository;
         this.shopService = shopService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Override
@@ -51,6 +53,10 @@ public class ShopImageServiceImpl implements ShopImageService {
             for (ShopImage image : imagesToDelete) {
                 if (!image.getShop().getId().equals(shopDb.getId())) {
                     throw new IllegalArgumentException("La imagen no pertenece a este local");
+                }
+                // Delete from Cloudinary before deleting from DB
+                if (image.getCloudinaryPublicId() != null) {
+                    cloudinaryService.deleteImage(image.getCloudinaryPublicId());
                 }
             }
             shopDb.getImages().removeAll(imagesToDelete);
@@ -96,11 +102,17 @@ public class ShopImageServiceImpl implements ShopImageService {
     }
 
     private ShopImage createImageEntity(MultipartFile file, Shop shop) throws IOException {
+        String[] uploadResult = cloudinaryService.uploadImage(file, "shop-images");
+        String imageUrl = uploadResult[0];
+        String publicId = uploadResult[1];
+
         ShopImage image = new ShopImage();
         image.setFileName(file.getOriginalFilename());
         image.setFileType(file.getContentType());
-        image.setImageData(file.getBytes());
+        image.setImageUrl(imageUrl);
+        image.setCloudinaryPublicId(publicId);
         image.setShop(shop);
+        
         shop.getImages().add(image);
         return image;
     }

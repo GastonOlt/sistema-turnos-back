@@ -35,6 +35,9 @@ public class Employee extends User {
 
     private String specialty;
 
+    /** Indicates if this employee is active. Used to soft-disable owner ghost profiles. */
+    private boolean active = true;
+
     public Shop getShop() {
         return shop;
     }
@@ -73,5 +76,13 @@ public class Employee extends User {
 
     public void setAppointments(List<Appointment> appointments) {
         this.appointments = appointments;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

@@ -12,8 +12,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Basic;
-
 
 @Entity
 @Table(name = "shop_image")
@@ -29,9 +27,11 @@ public class ShopImage {
     @Column(name = "file_type")
     private String fileType;
 
-    @Basic(fetch = FetchType.LAZY)
-    @Column(name = "image_data", columnDefinition = "BYTEA")
-    private byte[] imageData;
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "cloudinary_public_id")
+    private String cloudinaryPublicId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id")
@@ -49,14 +49,6 @@ public class ShopImage {
         this.id = id;
     }
 
-    public byte[] getImageData() {
-        return imageData;
-    }
-
-    public void setImageData(byte[] imageData) {
-        this.imageData = imageData;
-    }
-
     public String getFileName() {
         return fileName;
     }
@@ -71,6 +63,22 @@ public class ShopImage {
 
     public void setFileType(String fileType) {
         this.fileType = fileType;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getCloudinaryPublicId() {
+        return cloudinaryPublicId;
+    }
+
+    public void setCloudinaryPublicId(String cloudinaryPublicId) {
+        this.cloudinaryPublicId = cloudinaryPublicId;
     }
 
     public Shop getShop() {

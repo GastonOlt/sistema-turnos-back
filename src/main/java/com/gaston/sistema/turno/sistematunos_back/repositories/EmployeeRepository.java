@@ -17,5 +17,11 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findByShopId(Long shopId);
 
+    /** Returns only active employees (excludes deactivated owner ghost profiles). */
+    List<Employee> findByShopIdAndActiveTrue(Long shopId);
+
     long countByShopId(Long shopId);
+
+    /** Counts employees excluding a given role (used to exclude OWNER_PROVIDER ghost profiles from the 5-employee limit). */
+    long countByShopIdAndRoleNot(Long shopId, String role);
 }

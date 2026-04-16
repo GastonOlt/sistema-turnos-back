@@ -1,8 +1,8 @@
 package com.gaston.sistema.turno.sistematunos_back.services;
-
-import java.util.Base64;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
+import com.gaston.sistema.turno.sistematunos_back.entities.Schedule;
 import com.gaston.sistema.turno.sistematunos_back.entities.ShopImage;
 import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.repositories.EmployeeRepository;
@@ -19,16 +20,19 @@ import com.gaston.sistema.turno.sistematunos_back.validation.EmailAlreadyExistsE
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
+    private static final Logger log = LoggerFactory.getLogger(EmployeeServiceImpl.class);
     private final EmployeeRepository employeeRepository;
     private final ShopService shopService;
     private final ShopImageRepository shopImageRepository;
+    private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository, ShopService shopService,
-            ShopImageRepository shopImageRepository, PasswordEncoder passwordEncoder) {
+            ShopImageRepository shopImageRepository, CloudinaryService cloudinaryService, PasswordEncoder passwordEncoder) {
         this.employeeRepository = employeeRepository;
         this.shopService = shopService;
         this.shopImageRepository = shopImageRepository;
+        this.cloudinaryService = cloudinaryService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -39,16 +43,20 @@ public class EmployeeServiceImpl implements EmployeeService {
            }
 
            Shop shopDb = shopService.getByOwner(ownerId);
-           if (employeeRepository.countByShopId(shopDb.getId()) >= 5) {
+           // Exclude the owner ghost profile from the 5-employee real limit
+           if (employeeRepository.countByShopIdAndRoleNot(shopDb.getId(), "OWNER_PROVIDER") >= 5) {
               throw new IllegalArgumentException("No puedes tener mas de 5 empleados");
            }
 
            try{
                 if (file != null && !file.isEmpty()) {
+                    String[] uploadResult = cloudinaryService.uploadImage(file, "employee-images");
+                    
                     ShopImage employeeImage = new ShopImage();
                     employeeImage.setFileName(file.getOriginalFilename());
                     employeeImage.setFileType(file.getContentType());
-                    employeeImage.setImageData(file.getBytes());
+                    employeeImage.setImageUrl(uploadResult[0]);
+                    employeeImage.setCloudinaryPublicId(uploadResult[1]);
                     employee.setEmployeeImage(employeeImage);
                 }
            }catch(Exception e){
@@ -62,6 +70,22 @@ public class EmployeeServiceImpl implements EmployeeService {
            employee.setRole("EMPLEADO");
 
            Employee newEmployee = employeeRepository.save(employee);
+
+           // Inherit active shop schedules: copy each active schedule from the shop to the new employee
+           List<Schedule> shopSchedules = shopDb.getSchedules();
+           for (Schedule shopSchedule : shopSchedules) {
+               if (shopSchedule.isActive()) {
+                   Schedule employeeSchedule = new Schedule();
+                   employeeSchedule.setDayOfWeek(shopSchedule.getDayOfWeek());
+                   employeeSchedule.setOpeningTime(shopSchedule.getOpeningTime());
+                   employeeSchedule.setClosingTime(shopSchedule.getClosingTime());
+                   employeeSchedule.setActive(true);
+                   employeeSchedule.setEmployee(newEmployee);
+                   newEmployee.getSchedules().add(employeeSchedule);
+               }
+           }
+           employeeRepository.save(newEmployee);
+           log.info("Employee id={} created with {} inherited schedules", newEmployee.getId(), newEmployee.getSchedules().size());
 
            return toEmployeeDTO(newEmployee);
     }
@@ -83,13 +107,18 @@ public class EmployeeServiceImpl implements EmployeeService {
             try{
                 if(file != null && !file.isEmpty()){
                     ShopImage img = employeeDb.getEmployeeImage();
-                    if (img != null) {
+                    if (img != null && img.getCloudinaryPublicId() != null) {
+                        cloudinaryService.deleteImage(img.getCloudinaryPublicId());
                         shopImageRepository.delete(img);
                     }
+                    
+                    String[] uploadResult = cloudinaryService.uploadImage(file, "employee-images");
+
                     ShopImage employeeImage = new ShopImage();
                     employeeImage.setFileName(file.getOriginalFilename());
                     employeeImage.setFileType(file.getContentType());
-                    employeeImage.setImageData(file.getBytes());
+                    employeeImage.setImageUrl(uploadResult[0]);
+                    employeeImage.setCloudinaryPublicId(uploadResult[1]);
                     employeeDb.setEmployeeImage(employeeImage);
                }
             } catch (Exception e) {
@@ -146,8 +175,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             dto.setSpecialty(employee.getSpecialty());
 
             if(employee.getEmployeeImage() != null){
-                dto.setImageData(Base64.getEncoder().encodeToString(employee.getEmployeeImage().getImageData()));
-                dto.setContentType(employee.getEmployeeImage().getFileType());
+                dto.setImageUrl(employee.getEmployeeImage().getImageUrl());
             }
             return dto;
     }

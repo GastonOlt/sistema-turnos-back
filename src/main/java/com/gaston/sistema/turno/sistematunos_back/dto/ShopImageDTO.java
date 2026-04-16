@@ -3,12 +3,12 @@ package com.gaston.sistema.turno.sistematunos_back.dto;
 public class ShopImageDTO {
     private Long id;
     private String name;
-    private String downloadUrl;
+    private String imageUrl;
 
-    public ShopImageDTO(Long id, String name) {
+    public ShopImageDTO(Long id, String name, String imageUrl) {
         this.id = id;
         this.name = name;
-        this.downloadUrl = "http://localhost:8080/publico/locales/imagenes/" + id;
+        this.imageUrl = imageUrl;
     }
 
     public Long getId() {
@@ -23,10 +23,10 @@ public class ShopImageDTO {
     public void setName(String name) {
         this.name = name;
     }
-    public String getDownloadUrl() {
-        return downloadUrl;
+    public String getImageUrl() {
+        return imageUrl;
     }
-    public void setDownloadUrl(String downloadUrl) {
-        this.downloadUrl = downloadUrl;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

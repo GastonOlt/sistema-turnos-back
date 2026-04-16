@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.gaston.sistema.turno.sistematunos_back.dto.ReviewRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.ReviewResponseDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus;
-import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.entities.Review;
 import com.gaston.sistema.turno.sistematunos_back.entities.Appointment;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ShopRepository;

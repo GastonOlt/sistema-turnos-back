@@ -33,21 +33,21 @@ public class EmployeeScheduleController {
     @PostMapping
     public ResponseEntity<Schedule> createEmployeeSchedule(@Valid @RequestBody Schedule schedule, @AuthenticationPrincipal UserPrincipal user) {
         Long employeeId = user.getId();
-        Schedule newSchedule = scheduleService.createBarberSchedule(schedule, employeeId);
+        Schedule newSchedule = scheduleService.createEmployeeSchedule(schedule, employeeId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newSchedule);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Schedule> getEmployeeSchedule(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal user) {
         Long employeeId = user.getId();
-        Schedule schedule = scheduleService.getBarberSchedule(id, employeeId);
+        Schedule schedule = scheduleService.getEmployeeSchedule(id, employeeId);
         return ResponseEntity.status(HttpStatus.OK).body(schedule);
     }
 
     @GetMapping
     public ResponseEntity<List<Schedule>> getEmployeeSchedules(@AuthenticationPrincipal UserPrincipal user) {
         Long employeeId = user.getId();
-        List<Schedule> schedules = scheduleService.getBarberSchedules(employeeId);
+        List<Schedule> schedules = scheduleService.getEmployeeSchedules(employeeId);
         return ResponseEntity.status(HttpStatus.OK).body(schedules);
     }
 
@@ -55,14 +55,14 @@ public class EmployeeScheduleController {
     public ResponseEntity<Schedule> editEmployeeSchedule(@PathVariable Long id, @RequestBody Schedule schedule,
                                                 @AuthenticationPrincipal UserPrincipal user) {
         Long employeeId = user.getId();
-        Schedule updatedSchedule = scheduleService.editBarberSchedule(schedule, id, employeeId);
+        Schedule updatedSchedule = scheduleService.editEmployeeSchedule(schedule, id, employeeId);
         return ResponseEntity.status(HttpStatus.OK).body(updatedSchedule);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployeeSchedule(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal user){
          Long employeeId = user.getId();
-         scheduleService.deleteBarberSchedule(id, employeeId);
+         scheduleService.deleteEmployeeSchedule(id, employeeId);
           return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -39,7 +39,7 @@ public class ShopDTO {
 
         if (shop.getImages() != null) {
             this.images = shop.getImages().stream()
-                .map(img -> new ShopImageDTO(img.getId(), img.getFileName()))
+                .map(img -> new ShopImageDTO(img.getId(), img.getFileName(), img.getImageUrl()))
                 .collect(Collectors.toList());
         }
 
@@ -90,6 +90,9 @@ public class ShopDTO {
         dto.setEmail(e.getEmail());
         dto.setSpecialty(e.getSpecialty());
         dto.setRole(e.getRole());
+        if (e.getEmployeeImage() != null) {
+            dto.setImageUrl(e.getEmployeeImage().getImageUrl());
+        }
         return dto;
     }
 

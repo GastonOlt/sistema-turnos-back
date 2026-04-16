@@ -6,17 +6,17 @@ import com.gaston.sistema.turno.sistematunos_back.entities.Schedule;
 
 public interface ScheduleService {
     Schedule createShopSchedule(Schedule schedule, Long ownerId);
-    Schedule createBarberSchedule(Schedule schedule, Long barberId);
+    Schedule createEmployeeSchedule(Schedule schedule, Long employeeId);
 
     Schedule editShopSchedule(Schedule schedule, Long scheduleId, Long ownerId);
-    Schedule editBarberSchedule(Schedule schedule, Long scheduleId, Long barberId);
+    Schedule editEmployeeSchedule(Schedule schedule, Long scheduleId, Long employeeId);
 
     Schedule getSchedule(Long scheduleId, Long ownerId);
-    Schedule getBarberSchedule(Long scheduleId, Long barberId);
+    Schedule getEmployeeSchedule(Long scheduleId, Long employeeId);
 
     List<Schedule> getSchedules(Long ownerId);
-    List<Schedule> getBarberSchedules(Long barberId);
+    List<Schedule> getEmployeeSchedules(Long employeeId);
 
     void deleteShopSchedule(Long scheduleId, Long ownerId);
-    void deleteBarberSchedule(Long scheduleId, Long barberId);
+    void deleteEmployeeSchedule(Long scheduleId, Long employeeId);
 }
