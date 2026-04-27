@@ -10,14 +10,15 @@ import com.gaston.sistema.turno.sistematunos_back.dto.ShopDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Owner;
 import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ShopRepository;
+import com.gaston.sistema.turno.sistematunos_back.validation.ResourceNotFoundException;
 
 @Service
 public class ShopServiceImpl implements ShopService {
 
     private final ShopRepository shopRepository;
-    private final OwnerServiceImpl ownerService;
+    private final OwnerService ownerService; // DIP: depends on abstraction
 
-    public ShopServiceImpl(ShopRepository shopRepository, OwnerServiceImpl ownerService) {
+    public ShopServiceImpl(ShopRepository shopRepository, OwnerService ownerService) {
         this.shopRepository = shopRepository;
         this.ownerService = ownerService;
     }
@@ -46,14 +47,26 @@ public class ShopServiceImpl implements ShopService {
     @Transactional(readOnly = true)
     public Shop getShopById(Long id) {
         return shopRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Local no encontrado con ese id "+id));
+        .orElseThrow(() -> new ResourceNotFoundException("Shop", id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ShopDTO getShopDTOById(Long id) {
+        return new ShopDTO(getShopById(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Shop getByOwner(Long ownerId) {
       return shopRepository.findByOwnerId(ownerId).orElseThrow(() ->
-                                new IllegalArgumentException("local no econtrado con este Id de dueño: "+ownerId));
+                    new ResourceNotFoundException("Shop for owner id: " + ownerId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ShopDTO getByOwnerDTO(Long ownerId) {
+        return new ShopDTO(getByOwner(ownerId));
     }
 
     @Override

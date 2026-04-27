@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +57,14 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
         return appointmentRepository.findByEmployeeIdAndStatusWithRelations(employeeId, AppointmentStatus.COMPLETED).stream()
                .map(this::convertToDTO)
                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AppointmentEmployeeDTO> appointmentHistoryPaged(Long employeeId, Pageable pageable) {
+        return appointmentRepository.findByEmployeeIdAndStatusWithRelationsPaged(
+                employeeId, AppointmentStatus.COMPLETED, pageable)
+                .map(this::convertToDTO);
     }
 
     @Override

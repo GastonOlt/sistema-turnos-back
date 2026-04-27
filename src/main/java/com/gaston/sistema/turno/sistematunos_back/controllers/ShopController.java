@@ -36,10 +36,11 @@ public class ShopController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newShop);
     }
 
+    /** Returns the shop owned by the authenticated owner as a DTO (no JPA entity exposed). */
     @GetMapping
-    public ResponseEntity<?> getByOwner(@AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<ShopDTO> getByOwner(@AuthenticationPrincipal UserPrincipal user) {
         Long ownerId = user.getId();
-        Shop shop = shopService.getByOwner(ownerId);
+        ShopDTO shop = shopService.getByOwnerDTO(ownerId);
         return ResponseEntity.status(HttpStatus.OK).body(shop);
     }
 
@@ -50,9 +51,9 @@ public class ShopController {
         return ResponseEntity.status(HttpStatus.OK).body(editedShop);
     }
 
+    /** Returns shop by ID as a DTO. Prefer GET /public/shops/{id} for unauthenticated access. */
     @GetMapping("{id}")
-    public ResponseEntity<Shop> getShopById(@PathVariable Long id) {
-            Shop shopDb = shopService.getShopById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(shopDb);
+    public ResponseEntity<ShopDTO> getShopById(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(shopService.getShopDTOById(id));
     }
 }

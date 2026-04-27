@@ -3,6 +3,9 @@ package com.gaston.sistema.turno.sistematunos_back.services;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.gaston.sistema.turno.sistematunos_back.dto.ChangePasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.ClientDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.AppointmentClientDTO;
@@ -19,5 +22,6 @@ public interface ClientService {
 
     List<AppointmentClientDTO> getActiveAppointments(Long clientId);
     List<AppointmentClientDTO> getAppointmentHistory(Long clientId);
+    Page<AppointmentClientDTO> getAppointmentHistoryPaged(Long clientId, Pageable pageable);
     void cancelAppointment(Long clientId, Long appointmentId);
 }

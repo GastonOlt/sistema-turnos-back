@@ -3,6 +3,8 @@ package com.gaston.sistema.turno.sistematunos_back.repositories;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,6 +48,17 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               @Param("employeeId") Long employeeId,
               @Param("status") AppointmentStatus status);
 
+       /** Paginated version of employee appointment listing. */
+       @Query(value = "SELECT a FROM Appointment a " +
+              "JOIN FETCH a.client " +
+              "JOIN FETCH a.service " +
+              "WHERE a.employee.id = :employeeId AND a.status = :status",
+              countQuery = "SELECT COUNT(a) FROM Appointment a WHERE a.employee.id = :employeeId AND a.status = :status")
+       Page<Appointment> findByEmployeeIdAndStatusWithRelationsPaged(
+              @Param("employeeId") Long employeeId,
+              @Param("status") AppointmentStatus status,
+              Pageable pageable);
+
        // ─── Employee earnings (only service.price needed) ────────────────────────
        @Query("SELECT a FROM Appointment a " +
               "JOIN FETCH a.service " +
@@ -69,7 +82,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               @Param("clientId") Long clientId,
               @Param("currentDate") LocalDateTime currentDate);
 
-       // ─── Client history (shop + service pre-loaded) ───────────────────────────
+       // ─── Client history (shop + service pre-loaded) ───────────
        @Query("SELECT a FROM Appointment a " +
               "JOIN FETCH a.shop " +
               "JOIN FETCH a.service " +
@@ -80,6 +93,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
        List<Appointment> findClientHistoryWithRelations(
               @Param("clientId") Long clientId,
               @Param("currentDate") LocalDateTime currentDate);
+
+       /** Paginated version of client history. */
+       @Query(value = "SELECT a FROM Appointment a " +
+              "JOIN FETCH a.shop " +
+              "JOIN FETCH a.service " +
+              "WHERE a.client.id = :clientId " +
+              "AND (a.startDateTime < :currentDate " +
+              "OR a.status IN (com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, " +
+              "com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED))",
+              countQuery = "SELECT COUNT(a) FROM Appointment a WHERE a.client.id = :clientId " +
+              "AND (a.startDateTime < :currentDate OR a.status IN " +
+              "(com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.COMPLETED, " +
+              "com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus.CANCELLED))")
+       Page<Appointment> findClientHistoryWithRelationsPaged(
+              @Param("clientId") Long clientId,
+              @Param("currentDate") LocalDateTime currentDate,
+              Pageable pageable);
 
        // ─── Email reminder (client + service + shop pre-loaded) ─────────────────
        @Query("SELECT a FROM Appointment a " +

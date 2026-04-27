@@ -20,4 +20,6 @@ public interface EmployeeService {
     EmployeeDTO updateOwnProfile(Long employeeId, UpdateEmployeeProfileRequest request);
     /** Allows an employee to change their own password after verifying the current one. */
     void changePassword(Long employeeId, ChangePasswordRequest request);
+    /** Converts an Employee entity to its DTO representation. */
+    EmployeeDTO toEmployeeDTO(Employee employee);
 }

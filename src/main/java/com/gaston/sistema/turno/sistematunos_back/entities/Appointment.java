@@ -1,9 +1,11 @@
 package com.gaston.sistema.turno.sistematunos_back.entities;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,6 +16,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.FetchType;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "appointment")
@@ -52,6 +56,11 @@ public class Appointment {
     private AppointmentStatus status;
 
     private boolean early = false;
+
+    /** Timestamp of when this appointment record was created (booking time). */
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Instant createdAt;
 
     public Long getId() {
         return id;

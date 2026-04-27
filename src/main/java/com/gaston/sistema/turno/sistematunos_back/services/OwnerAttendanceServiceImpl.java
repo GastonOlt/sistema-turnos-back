@@ -24,18 +24,18 @@ public class OwnerAttendanceServiceImpl implements OwnerAttendanceService {
 
     private final OwnerRepository ownerRepository;
     private final EmployeeRepository employeeRepository;
-    private final EmployeeServiceImpl employeeServiceImpl;
+    private final EmployeeService employeeService; // depends on abstraction, not implementation (DIP)
     private final ShopService shopService;
     private final PasswordEncoder passwordEncoder;
 
     public OwnerAttendanceServiceImpl(OwnerRepository ownerRepository,
                                       EmployeeRepository employeeRepository,
-                                      EmployeeServiceImpl employeeServiceImpl,
+                                      EmployeeService employeeService,
                                       ShopService shopService,
                                       PasswordEncoder passwordEncoder) {
         this.ownerRepository = ownerRepository;
         this.employeeRepository = employeeRepository;
-        this.employeeServiceImpl = employeeServiceImpl;
+        this.employeeService = employeeService;
         this.shopService = shopService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -72,7 +72,7 @@ public class OwnerAttendanceServiceImpl implements OwnerAttendanceService {
         }
 
         ownerRepository.save(owner);
-        return employeeServiceImpl.toEmployeeDTO(owner.getEmployeeProfile());
+        return employeeService.toEmployeeDTO(owner.getEmployeeProfile());
     }
 
     /**

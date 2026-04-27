@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,6 +141,21 @@ public class ClientServiceImpl implements ClientService {
         return appointments.stream()
                 .map(a -> convertToAppointmentClientDTO(a, reviewsByAppointment.get(a.getId())))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AppointmentClientDTO> getAppointmentHistoryPaged(Long clientId, Pageable pageable) {
+        Page<Appointment> page = appointmentRepository.findClientHistoryWithRelationsPaged(
+                clientId, LocalDateTime.now(), pageable);
+
+        // Batch-load reviews for this page to eliminate N+1
+        List<Long> appointmentIds = page.getContent().stream().map(Appointment::getId).toList();
+        Map<Long, Review> reviewsByAppointment = reviewRepository.findByAppointmentIdIn(appointmentIds)
+                .stream()
+                .collect(Collectors.toMap(r -> r.getAppointment().getId(), r -> r));
+
+        return page.map(a -> convertToAppointmentClientDTO(a, reviewsByAppointment.get(a.getId())));
     }
 
     @Override

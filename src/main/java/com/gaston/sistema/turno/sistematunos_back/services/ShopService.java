@@ -10,6 +10,8 @@ public interface ShopService {
         ShopDTO createShop(Shop shop, Long ownerId);
         ShopDTO editShop(Shop shop, Long ownerId);
         Shop getShopById(Long id);
+        ShopDTO getShopDTOById(Long id);
         Shop getByOwner(Long ownerId);
+        ShopDTO getByOwnerDTO(Long ownerId);
         Page<ShopDTO> getShops(String shopType, String province, String name, Pageable pageable);
 }

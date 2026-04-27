@@ -1,5 +1,8 @@
 package com.gaston.sistema.turno.sistematunos_back.entities;
 
+import java.time.Instant;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +14,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "app_user")
@@ -40,6 +46,15 @@ public abstract class User {
     private String password;
 
     private String role;
+
+    /** Automatically set on INSERT by Hibernate — never modified after creation. */
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Instant createdAt;
+
+    /** Automatically updated on every UPDATE by Hibernate. */
+    @UpdateTimestamp
+    private Instant updatedAt;
 
     public Long getId() {
         return id;

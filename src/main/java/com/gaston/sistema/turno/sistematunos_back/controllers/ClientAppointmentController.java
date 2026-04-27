@@ -3,6 +3,10 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,6 +77,16 @@ public class ClientAppointmentController {
     public ResponseEntity<List<AppointmentClientDTO>> getAppointmentHistory(@AuthenticationPrincipal UserPrincipal user) {
         Long clientId = user.getId();
         List<AppointmentClientDTO> appointments = clientService.getAppointmentHistory(clientId);
+        return ResponseEntity.status(HttpStatus.OK).body(appointments);
+    }
+
+    /** Paginated appointment history — recommended for production use. Default page size: 10. */
+    @GetMapping("/history/paged")
+    public ResponseEntity<Page<AppointmentClientDTO>> getAppointmentHistoryPaged(
+            @AuthenticationPrincipal UserPrincipal user,
+            @PageableDefault(size = 10, sort = "startDateTime") Pageable pageable) {
+        Long clientId = user.getId();
+        Page<AppointmentClientDTO> appointments = clientService.getAppointmentHistoryPaged(clientId, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(appointments);
     }
 
