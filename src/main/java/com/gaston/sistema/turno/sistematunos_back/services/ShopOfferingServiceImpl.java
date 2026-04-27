@@ -6,9 +6,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.ShopOfferingDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.ShopOfferingRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.entities.ShopOffering;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ShopOfferingRepository;
+import com.gaston.sistema.turno.sistematunos_back.validation.ResourceNotFoundException;
 
 @Service
 public class ShopOfferingServiceImpl implements ShopOfferingService {
@@ -23,55 +26,59 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
 
     @Override
     @Transactional
-    public ShopOffering createService(ShopOffering service, Long ownerId) {
-            Shop shopDb = shopService.getByOwner(ownerId);
-            service.setShop(shopDb);
-            shopDb.getServices().add(service);
-            ShopOffering newService = shopOfferingRepository.save(service);
-            return newService;
+    public ShopOfferingDTO createService(ShopOfferingRequestDTO request, Long ownerId) {
+        Shop shopDb = shopService.getByOwner(ownerId);
+        ShopOffering service = toEntity(request);
+        service.setShop(shopDb);
+        shopDb.getServices().add(service);
+        return toDTO(shopOfferingRepository.save(service));
     }
 
     @Override
     @Transactional
-    public ShopOffering editService(ShopOffering service, Long serviceId, Long ownerId) {
-            ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
-                                         new IllegalArgumentException("error al encontar el servicio con id: "+serviceId));
+    public ShopOfferingDTO editService(ShopOfferingRequestDTO request, Long serviceId, Long ownerId) {
+        ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(() ->
+                new ResourceNotFoundException("ShopOffering", serviceId));
 
-            if(!serviceDb.getShop().getOwner().getId().equals(ownerId)){
-                 throw new AccessDeniedException("No tienes permisos para editar este servicio");
-            }
-            serviceDb.setDescription(service.getDescription());
-            serviceDb.setName(service.getName());
-            serviceDb.setPrice(service.getPrice());
-            serviceDb.setDuration(service.getDuration());
-            return shopOfferingRepository.save(serviceDb);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ShopOffering getService(Long serviceId, Long ownerId) {
-        ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
-                                new IllegalArgumentException("error al encontar el servicio con id: "+serviceId));
-
-        if(!serviceDb.getShop().getOwner().getId().equals(ownerId)){
-            throw new AccessDeniedException("no tienes permisos para ver este servicio");
+        if (!serviceDb.getShop().getOwner().getId().equals(ownerId)) {
+            throw new AccessDeniedException("You do not have permission to edit this service");
         }
-        return serviceDb;
+        serviceDb.setName(request.getName());
+        serviceDb.setDescription(request.getDescription());
+        serviceDb.setPrice(request.getPrice());
+        serviceDb.setDuration(request.getDuration());
+        return toDTO(shopOfferingRepository.save(serviceDb));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ShopOffering> getServices(Long ownerId) {
-         Shop shopDb = shopService.getByOwner(ownerId);
-         return shopOfferingRepository.findByShopId(shopDb.getId());
+    public ShopOfferingDTO getService(Long serviceId, Long ownerId) {
+        ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(() ->
+                new ResourceNotFoundException("ShopOffering", serviceId));
+
+        if (!serviceDb.getShop().getOwner().getId().equals(ownerId)) {
+            throw new AccessDeniedException("You do not have permission to view this service");
+        }
+        return toDTO(serviceDb);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ShopOfferingDTO> getServices(Long ownerId) {
+        Shop shopDb = shopService.getByOwner(ownerId);
+        return shopOfferingRepository.findByShopId(shopDb.getId())
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
     public void deleteService(Long serviceId, Long ownerId) {
-        ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
-                                    new IllegalArgumentException("no se encontro el servicio con ese id: "+serviceId));
-        if(!serviceDb.getShop().getOwner().getId().equals(ownerId)){
-            throw new AccessDeniedException("no tienes permitido eliminar este servcio");
+        ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(() ->
+                new ResourceNotFoundException("ShopOffering", serviceId));
+
+        if (!serviceDb.getShop().getOwner().getId().equals(ownerId)) {
+            throw new AccessDeniedException("You do not have permission to delete this service");
         }
         shopOfferingRepository.delete(serviceDb);
     }
@@ -79,8 +86,28 @@ public class ShopOfferingServiceImpl implements ShopOfferingService {
     @Override
     @Transactional(readOnly = true)
     public ShopOffering getServiceEntity(Long serviceId) {
-           ShopOffering serviceDb = shopOfferingRepository.findById(serviceId).orElseThrow(()->
-                                new IllegalArgumentException("error al encontar el servicio con id: "+serviceId));
-        return serviceDb;
+        return shopOfferingRepository.findById(serviceId).orElseThrow(() ->
+                new ResourceNotFoundException("ShopOffering", serviceId));
+    }
+
+    // ===================== PRIVATE MAPPERS =====================
+
+    private ShopOffering toEntity(ShopOfferingRequestDTO request) {
+        ShopOffering entity = new ShopOffering();
+        entity.setName(request.getName());
+        entity.setDescription(request.getDescription());
+        entity.setDuration(request.getDuration());
+        entity.setPrice(request.getPrice());
+        return entity;
+    }
+
+    private ShopOfferingDTO toDTO(ShopOffering entity) {
+        ShopOfferingDTO dto = new ShopOfferingDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setDuration(entity.getDuration());
+        dto.setPrice(entity.getPrice());
+        return dto;
     }
 }

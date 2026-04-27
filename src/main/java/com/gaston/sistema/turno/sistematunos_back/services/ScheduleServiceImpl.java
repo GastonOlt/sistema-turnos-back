@@ -9,10 +9,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.ScheduleDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.ScheduleRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
 import com.gaston.sistema.turno.sistematunos_back.entities.Schedule;
 import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.repositories.ScheduleRepository;
+import com.gaston.sistema.turno.sistematunos_back.validation.ResourceNotFoundException;
 
 @Service
 public class ScheduleServiceImpl implements ScheduleService {
@@ -34,53 +37,54 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    public Schedule createShopSchedule(Schedule schedule, Long ownerId) {
+    public ScheduleDTO createShopSchedule(ScheduleRequestDTO request, Long ownerId) {
         Shop shopDb = shopService.getByOwner(ownerId);
+        Schedule schedule = toEntity(request);
         shopDb.getSchedules().add(schedule);
         schedule.setShop(shopDb);
         log.info("Shop schedule created for shop id={} day={}", shopDb.getId(), schedule.getDayOfWeek());
-        return scheduleRepository.save(schedule);
+        return toDTO(scheduleRepository.save(schedule));
     }
 
     @Override
     @Transactional
-    public Schedule editShopSchedule(Schedule schedule, Long scheduleId, Long ownerId) {
+    public ScheduleDTO editShopSchedule(ScheduleRequestDTO request, Long scheduleId, Long ownerId) {
         Schedule scheduleDb = scheduleRepository.findById(scheduleId).orElseThrow(() ->
-                new IllegalArgumentException("Schedule not found with id: " + scheduleId));
+                new ResourceNotFoundException("Schedule", scheduleId));
         if (!scheduleDb.getShop().getOwner().getId().equals(ownerId)) {
             throw new AccessDeniedException("You do not have permission to edit this schedule");
         }
-        scheduleDb.setActive(schedule.isActive());
-        scheduleDb.setDayOfWeek(schedule.getDayOfWeek());
-        scheduleDb.setOpeningTime(schedule.getOpeningTime());
-        scheduleDb.setClosingTime(schedule.getClosingTime());
+        applyRequestToEntity(request, scheduleDb);
         log.info("Shop schedule id={} updated", scheduleId);
-        return scheduleRepository.save(scheduleDb);
+        return toDTO(scheduleRepository.save(scheduleDb));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Schedule> getSchedules(Long ownerId) {
+    public List<ScheduleDTO> getSchedules(Long ownerId) {
         Shop shopDb = shopService.getByOwner(ownerId);
-        return scheduleRepository.findByShopId(shopDb.getId());
+        return scheduleRepository.findByShopId(shopDb.getId())
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Schedule getSchedule(Long scheduleId, Long ownerId) {
+    public ScheduleDTO getSchedule(Long scheduleId, Long ownerId) {
         Schedule scheduleDb = scheduleRepository.findById(scheduleId).orElseThrow(() ->
-                new IllegalArgumentException("Schedule not found with id: " + scheduleId));
+                new ResourceNotFoundException("Schedule", scheduleId));
         if (!scheduleDb.getShop().getOwner().getId().equals(ownerId)) {
             throw new AccessDeniedException("You do not have permission to view this schedule");
         }
-        return scheduleDb;
+        return toDTO(scheduleDb);
     }
 
     @Override
     @Transactional
     public void deleteShopSchedule(Long scheduleId, Long ownerId) {
         Schedule scheduleDb = scheduleRepository.findById(scheduleId).orElseThrow(() ->
-                new IllegalArgumentException("Schedule not found with id: " + scheduleId));
+                new ResourceNotFoundException("Schedule", scheduleId));
         if (!scheduleDb.getShop().getOwner().getId().equals(ownerId)) {
             throw new AccessDeniedException("You do not have permission to delete this schedule");
         }
@@ -92,54 +96,56 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    public Schedule createEmployeeSchedule(Schedule schedule, Long employeeId) {
+    public ScheduleDTO createEmployeeSchedule(ScheduleRequestDTO request, Long employeeId) {
         Employee employeeDb = employeeService.getEmployeeEntity(employeeId);
+        Schedule schedule = toEntity(request);
         validateScheduleWithinShopRange(schedule, employeeDb.getShop());
         employeeDb.getSchedules().add(schedule);
         schedule.setEmployee(employeeDb);
         log.info("Employee schedule created for employee id={} day={}", employeeId, schedule.getDayOfWeek());
-        return scheduleRepository.save(schedule);
+        return toDTO(scheduleRepository.save(schedule));
     }
 
     @Override
     @Transactional
-    public Schedule editEmployeeSchedule(Schedule schedule, Long scheduleId, Long employeeId) {
+    public ScheduleDTO editEmployeeSchedule(ScheduleRequestDTO request, Long scheduleId, Long employeeId) {
         Schedule scheduleDb = scheduleRepository.findById(scheduleId).orElseThrow(() ->
-                new IllegalArgumentException("Schedule not found with id: " + scheduleId));
+                new ResourceNotFoundException("Schedule", scheduleId));
         if (!scheduleDb.getEmployee().getId().equals(employeeId)) {
             throw new AccessDeniedException("You do not have permission to edit this schedule");
         }
-        validateScheduleWithinShopRange(schedule, scheduleDb.getEmployee().getShop());
-        scheduleDb.setActive(schedule.isActive());
-        scheduleDb.setDayOfWeek(schedule.getDayOfWeek());
-        scheduleDb.setOpeningTime(schedule.getOpeningTime());
-        scheduleDb.setClosingTime(schedule.getClosingTime());
+        Schedule proposed = toEntity(request);
+        validateScheduleWithinShopRange(proposed, scheduleDb.getEmployee().getShop());
+        applyRequestToEntity(request, scheduleDb);
         log.info("Employee schedule id={} updated", scheduleId);
-        return scheduleRepository.save(scheduleDb);
+        return toDTO(scheduleRepository.save(scheduleDb));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Schedule getEmployeeSchedule(Long scheduleId, Long employeeId) {
+    public ScheduleDTO getEmployeeSchedule(Long scheduleId, Long employeeId) {
         Schedule scheduleDb = scheduleRepository.findById(scheduleId).orElseThrow(() ->
-                new IllegalArgumentException("Schedule not found with id: " + scheduleId));
+                new ResourceNotFoundException("Schedule", scheduleId));
         if (!scheduleDb.getEmployee().getId().equals(employeeId)) {
             throw new AccessDeniedException("You do not have permission to view this schedule");
         }
-        return scheduleDb;
+        return toDTO(scheduleDb);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Schedule> getEmployeeSchedules(Long employeeId) {
-        return scheduleRepository.findByEmployeeId(employeeId);
+    public List<ScheduleDTO> getEmployeeSchedules(Long employeeId) {
+        return scheduleRepository.findByEmployeeId(employeeId)
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
     @Transactional
     public void deleteEmployeeSchedule(Long scheduleId, Long employeeId) {
         Schedule scheduleDb = scheduleRepository.findById(scheduleId).orElseThrow(() ->
-                new IllegalArgumentException("Schedule not found with id: " + scheduleId));
+                new ResourceNotFoundException("Schedule", scheduleId));
         if (!scheduleDb.getEmployee().getId().equals(employeeId)) {
             throw new AccessDeniedException("You do not have permission to delete this schedule");
         }
@@ -147,7 +153,33 @@ public class ScheduleServiceImpl implements ScheduleService {
         log.info("Employee schedule id={} deleted", scheduleId);
     }
 
-    // ===================== PRIVATE VALIDATION =====================
+    // ===================== PRIVATE HELPERS =====================
+
+    private Schedule toEntity(ScheduleRequestDTO request) {
+        Schedule schedule = new Schedule();
+        schedule.setDayOfWeek(request.getDayOfWeek());
+        schedule.setOpeningTime(request.getOpeningTime());
+        schedule.setClosingTime(request.getClosingTime());
+        schedule.setActive(request.isActive());
+        return schedule;
+    }
+
+    private void applyRequestToEntity(ScheduleRequestDTO request, Schedule entity) {
+        entity.setDayOfWeek(request.getDayOfWeek());
+        entity.setOpeningTime(request.getOpeningTime());
+        entity.setClosingTime(request.getClosingTime());
+        entity.setActive(request.isActive());
+    }
+
+    private ScheduleDTO toDTO(Schedule entity) {
+        ScheduleDTO dto = new ScheduleDTO();
+        dto.setId(entity.getId());
+        dto.setDayOfWeek(entity.getDayOfWeek());
+        dto.setOpeningTime(entity.getOpeningTime());
+        dto.setClosingTime(entity.getClosingTime());
+        dto.setActive(entity.isActive());
+        return dto;
+    }
 
     /**
      * Validates that an employee's schedule falls within the shop's master schedule for the same day.

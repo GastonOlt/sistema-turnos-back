@@ -34,7 +34,7 @@ public class EmployeeProfileController {
     @Operation(summary = "Get own profile", description = "Returns the authenticated employee's current profile data.")
     @GetMapping
     public ResponseEntity<EmployeeDTO> getProfile(@AuthenticationPrincipal UserPrincipal user) {
-        EmployeeDTO dto = toDTO(employeeService.getEmployeeEntity(user.getId()));
+        EmployeeDTO dto = employeeService.toEmployeeDTO(employeeService.getEmployeeEntity(user.getId()));
         return ResponseEntity.status(HttpStatus.OK).body(dto);
     }
 
@@ -54,17 +54,5 @@ public class EmployeeProfileController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    private EmployeeDTO toDTO(com.gaston.sistema.turno.sistematunos_back.entities.Employee employee) {
-        EmployeeDTO dto = new EmployeeDTO();
-        dto.setId(employee.getId());
-        dto.setName(employee.getName());
-        dto.setLastName(employee.getLastName());
-        dto.setEmail(employee.getEmail());
-        dto.setRole(employee.getRole());
-        dto.setSpecialty(employee.getSpecialty());
-        if (employee.getEmployeeImage() != null) {
-            dto.setImageUrl(employee.getEmployeeImage().getImageUrl());
-        }
-        return dto;
-    }
 }
+

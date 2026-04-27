@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.AppointmentEmployeeDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.ShopOfferingDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
 import com.gaston.sistema.turno.sistematunos_back.entities.AppointmentStatus;
-import com.gaston.sistema.turno.sistematunos_back.entities.ShopOffering;
 import com.gaston.sistema.turno.sistematunos_back.entities.Appointment;
 import com.gaston.sistema.turno.sistematunos_back.repositories.AppointmentRepository;
 
@@ -125,9 +125,19 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
 
     @Override
     @Transactional(readOnly = true)
-    public List<ShopOffering> getServicesByEmployee(Long employeeId) {
+    public List<ShopOfferingDTO> getServicesByEmployee(Long employeeId) {
         Employee employee = employeeService.getEmployeeEntity(employeeId);
-        return employee.getShop().getServices();
+        return employee.getShop().getServices().stream()
+                .map(s -> {
+                    ShopOfferingDTO dto = new ShopOfferingDTO();
+                    dto.setId(s.getId());
+                    dto.setName(s.getName());
+                    dto.setDescription(s.getDescription());
+                    dto.setDuration(s.getDuration());
+                    dto.setPrice(s.getPrice());
+                    return dto;
+                })
+                .toList();
     }
 
     @Override

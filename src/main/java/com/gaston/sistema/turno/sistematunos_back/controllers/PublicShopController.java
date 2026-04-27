@@ -5,9 +5,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.AvailableSlotDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.ReviewResponseDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.ShopDTO;
-import com.gaston.sistema.turno.sistematunos_back.entities.Shop;
 import com.gaston.sistema.turno.sistematunos_back.services.AppointmentService;
+import com.gaston.sistema.turno.sistematunos_back.services.ReviewService;
 import com.gaston.sistema.turno.sistematunos_back.services.ShopService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,17 +32,19 @@ public class PublicShopController {
 
     private final ShopService shopService;
     private final AppointmentService appointmentService;
+    private final ReviewService reviewService;
 
-    public PublicShopController(ShopService shopService, AppointmentService appointmentService) {
+    public PublicShopController(ShopService shopService, AppointmentService appointmentService,
+                                ReviewService reviewService) {
         this.shopService = shopService;
         this.appointmentService = appointmentService;
+        this.reviewService = reviewService;
     }
 
     @GetMapping("{id}")
     @SecurityRequirements()
     public ResponseEntity<ShopDTO> getShopById(@PathVariable Long id) {
-        Shop shopDb = shopService.getShopById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(new ShopDTO(shopDb));
+        return ResponseEntity.status(HttpStatus.OK).body(shopService.getShopDTOById(id));
     }
 
     @GetMapping
@@ -73,5 +76,21 @@ public class PublicShopController {
 
         List<AvailableSlotDTO> slots = appointmentService.getAvailableSlots(shopId, employeeId, serviceId, date);
         return ResponseEntity.status(HttpStatus.OK).body(slots);
+    }
+
+    @Operation(summary = "Get shop reviews (public)",
+               description = "Returns all reviews for a specific shop. No authentication required.")
+    @SecurityRequirements()
+    @GetMapping("/{shopId}/reviews")
+    public ResponseEntity<List<ReviewResponseDTO>> getShopReviews(@PathVariable Long shopId) {
+        return ResponseEntity.status(HttpStatus.OK).body(reviewService.getReviewsByShop(shopId));
+    }
+
+    @Operation(summary = "Get shop average rating (public)",
+               description = "Returns the average rating score for a specific shop. No authentication required.")
+    @SecurityRequirements()
+    @GetMapping("/{shopId}/reviews/average")
+    public ResponseEntity<Double> getShopAverageRating(@PathVariable Long shopId) {
+        return ResponseEntity.status(HttpStatus.OK).body(reviewService.getShopAverageRating(shopId));
     }
 }

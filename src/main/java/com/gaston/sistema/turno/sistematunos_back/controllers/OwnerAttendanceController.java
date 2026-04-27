@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.AttendanceToggleRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.OwnerAttendanceService;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 /**
  * Controller for managing the owner's ability to personally attend appointments.
@@ -33,8 +33,8 @@ public class OwnerAttendanceController {
     /**
      * Toggles the owner's attendance availability.
      *
-     * @param user      authenticated owner principal
-     * @param request   JSON body with a single boolean field: { "available": true/false }
+     * @param user    authenticated owner principal
+     * @param request JSON body with a single boolean field: { "available": true/false }
      * @return EmployeeDTO of the ghost profile (useful for frontend to display the owner as a provider)
      */
     @PutMapping
@@ -44,20 +44,5 @@ public class OwnerAttendanceController {
         Long ownerId = user.getId();
         EmployeeDTO ghostProfile = ownerAttendanceService.toggleOwnerAttendance(ownerId, request.isAvailable());
         return ResponseEntity.status(HttpStatus.OK).body(ghostProfile);
-    }
-
-    /** Simple request DTO to receive the availability flag. */
-    public static class AttendanceToggleRequest {
-
-        @NotNull(message = "The 'available' field must be provided")
-        private Boolean available;
-
-        public Boolean isAvailable() {
-            return available;
-        }
-
-        public void setAvailable(Boolean available) {
-            this.available = available;
-        }
     }
 }

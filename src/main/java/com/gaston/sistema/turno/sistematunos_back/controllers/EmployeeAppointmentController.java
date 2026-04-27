@@ -24,7 +24,7 @@ import com.gaston.sistema.turno.sistematunos_back.dto.AppointmentEmployeeDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.AppointmentRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.AppointmentResponseDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.AvailableSlotDTO;
-import com.gaston.sistema.turno.sistematunos_back.entities.ShopOffering;
+import com.gaston.sistema.turno.sistematunos_back.dto.ShopOfferingDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.AppointmentService;
 import com.gaston.sistema.turno.sistematunos_back.services.EmployeeAppointmentService;
@@ -116,9 +116,9 @@ public class EmployeeAppointmentController {
     }
 
     @GetMapping("/my-services")
-    public ResponseEntity<List<ShopOffering>> getMyServices(@AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<List<ShopOfferingDTO>> getMyServices(@AuthenticationPrincipal UserPrincipal user) {
         Long employeeId = user.getId();
-        List<ShopOffering> services = employeeAppointmentService.getServicesByEmployee(employeeId);
+        List<ShopOfferingDTO> services = employeeAppointmentService.getServicesByEmployee(employeeId);
         return ResponseEntity.status(HttpStatus.OK).body(services);
     }
 }

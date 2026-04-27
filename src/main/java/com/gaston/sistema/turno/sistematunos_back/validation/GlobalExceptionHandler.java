@@ -60,6 +60,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /**
+     * Domain rule violations (e.g. slot already taken, cannot cancel confirmed appointment) — 422 Unprocessable Entity.
+     * Preferred over IllegalArgumentException for business-level rejections that are semantically
+     * different from input validation errors (400).
+     */
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<Map<String, String>> handleBusinessRuleException(BusinessRuleException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", ex.getMessage()));
+    }
+
     /** General runtime exceptions — 400 Bad Request */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {

@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.ChangePasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.UpdateEmployeeProfileRequest;
 import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
 import com.gaston.sistema.turno.sistematunos_back.entities.Schedule;
@@ -39,8 +40,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDTO createEmployee(Employee employee, Long ownerId, MultipartFile file) {
-           if(employeeRepository.findByEmail(employee.getEmail()).isPresent()){
+    public EmployeeDTO createEmployee(EmployeeRequestDTO request, Long ownerId, MultipartFile file) {
+           if(employeeRepository.findByEmail(request.getEmail()).isPresent()){
                throw new EmailAlreadyExistsException("Email ya registrado");
            }
 
@@ -49,6 +50,12 @@ public class EmployeeServiceImpl implements EmployeeService {
            if (employeeRepository.countByShopIdAndRoleNot(shopDb.getId(), "OWNER_PROVIDER") >= 5) {
               throw new IllegalArgumentException("No puedes tener mas de 5 empleados");
            }
+
+           Employee employee = new Employee();
+           employee.setName(request.getName());
+           employee.setLastName(request.getLastName());
+           employee.setEmail(request.getEmail());
+           employee.setSpecialty(request.getSpecialty());
 
            try{
                 if (file != null && !file.isEmpty()) {
@@ -67,7 +74,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
            shopDb.getEmployees().add(employee);
 
-           employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+           employee.setPassword(passwordEncoder.encode(request.getPassword()));
            employee.setShop(shopDb);
            employee.setRole("EMPLEADO");
 
@@ -93,7 +100,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDTO editEmployee(Employee employee, MultipartFile file, Long employeeId, Long ownerId) {
+    public EmployeeDTO editEmployee(EmployeeRequestDTO request, MultipartFile file, Long employeeId, Long ownerId) {
             Employee employeeDb = employeeRepository.findById(employeeId).orElseThrow(() ->
                                      new IllegalArgumentException("No se encontro el empleado con ese id " + employeeId));
 
@@ -101,10 +108,10 @@ public class EmployeeServiceImpl implements EmployeeService {
               throw new AccessDeniedException("No tienes permisos para editar este empleado");
             }
 
-            employeeDb.setLastName(employee.getLastName());
-            employeeDb.setSpecialty(employee.getSpecialty());
-            employeeDb.setName(employee.getName());
-            employeeDb.setEmail(employee.getEmail());
+            employeeDb.setLastName(request.getLastName());
+            employeeDb.setSpecialty(request.getSpecialty());
+            employeeDb.setName(request.getName());
+            employeeDb.setEmail(request.getEmail());
 
             try{
                 if(file != null && !file.isEmpty()){

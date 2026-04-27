@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeDTO;
-import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
+import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeRequestDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.EmployeeService;
 
@@ -34,28 +34,29 @@ public class EmployeeController {
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<EmployeeDTO> createEmployee(@Valid @RequestPart("employee") Employee employee,
+    public ResponseEntity<EmployeeDTO> createEmployee(@Valid @RequestPart("employee") EmployeeRequestDTO request,
                         @AuthenticationPrincipal UserPrincipal user,
                         @RequestPart(value = "image", required = false) MultipartFile file) {
         Long ownerId = user.getId();
-        EmployeeDTO newEmployee = employeeService.createEmployee(employee, ownerId, file);
+        EmployeeDTO newEmployee = employeeService.createEmployee(request, ownerId, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(newEmployee);
     }
 
     @DeleteMapping("/{employeeId}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long employeeId, @AuthenticationPrincipal UserPrincipal user){
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long employeeId,
+                                               @AuthenticationPrincipal UserPrincipal user) {
         Long ownerId = user.getId();
         employeeService.deleteEmployee(employeeId, ownerId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PutMapping(value = "/{employeeId}", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> editEmployee(@RequestPart("employee") Employee employee,
+    public ResponseEntity<EmployeeDTO> editEmployee(@Valid @RequestPart("employee") EmployeeRequestDTO request,
                         @RequestPart(value = "image", required = false) MultipartFile file,
                         @PathVariable Long employeeId,
                         @AuthenticationPrincipal UserPrincipal user) {
         Long ownerId = user.getId();
-        EmployeeDTO editedEmployee = employeeService.editEmployee(employee, file, employeeId, ownerId);
+        EmployeeDTO editedEmployee = employeeService.editEmployee(request, file, employeeId, ownerId);
         return ResponseEntity.status(HttpStatus.OK).body(editedEmployee);
     }
 
@@ -67,7 +68,8 @@ public class EmployeeController {
     }
 
     @GetMapping("/{employeeId}")
-    public ResponseEntity<EmployeeDTO> getEmployee(@PathVariable Long employeeId, @AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<EmployeeDTO> getEmployee(@PathVariable Long employeeId,
+                                                   @AuthenticationPrincipal UserPrincipal user) {
         Long ownerId = user.getId();
         EmployeeDTO employee = employeeService.getEmployee(employeeId, ownerId);
         return ResponseEntity.status(HttpStatus.OK).body(employee);

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +22,6 @@ import com.gaston.sistema.turno.sistematunos_back.dto.ForgotPasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.ResetPasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.entities.Client;
 import com.gaston.sistema.turno.sistematunos_back.entities.PasswordResetToken;
-import com.gaston.sistema.turno.sistematunos_back.entities.User;
 import com.gaston.sistema.turno.sistematunos_back.repositories.PasswordResetTokenRepository;
 import com.gaston.sistema.turno.sistematunos_back.repositories.UserRepository;
 
