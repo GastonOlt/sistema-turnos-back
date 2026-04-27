@@ -8,7 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.ChangePasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.EmployeeDTO;
+import com.gaston.sistema.turno.sistematunos_back.dto.UpdateEmployeeProfileRequest;
 import com.gaston.sistema.turno.sistematunos_back.entities.Employee;
 import com.gaston.sistema.turno.sistematunos_back.entities.Schedule;
 import com.gaston.sistema.turno.sistematunos_back.entities.ShopImage;
@@ -163,6 +165,48 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee getEmployeeEntity(Long employeeId) {
         return employeeRepository.findById(employeeId).orElseThrow(()->
                                 new IllegalArgumentException("error al encontrar al empleado"));
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public EmployeeDTO updateOwnProfile(Long employeeId, UpdateEmployeeProfileRequest request) {
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
+                new IllegalArgumentException("Employee not found with id: " + employeeId));
+
+        // Check email uniqueness if it changed
+        if (!employee.getEmail().equalsIgnoreCase(request.getEmail())) {
+            employeeRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
+                if (!existing.getId().equals(employeeId)) {
+                    throw new com.gaston.sistema.turno.sistematunos_back.validation.EmailAlreadyExistsException(
+                            "Email is already in use by another account");
+                }
+            });
+        }
+
+        employee.setName(request.getName());
+        employee.setLastName(request.getLastName());
+        employee.setEmail(request.getEmail());
+        employee.setSpecialty(request.getSpecialty());
+
+        Employee updated = employeeRepository.save(employee);
+        log.info("Employee id={} updated their own profile", employeeId);
+        return toEmployeeDTO(updated);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void changePassword(Long employeeId, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("New password and confirmation do not match");
+        }
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
+                new IllegalArgumentException("Employee not found with id: " + employeeId));
+        if (!passwordEncoder.matches(request.getCurrentPassword(), employee.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        employee.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        employeeRepository.save(employee);
+        log.info("Employee id={} changed their password", employeeId);
     }
 
     public EmployeeDTO toEmployeeDTO(Employee employee){

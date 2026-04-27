@@ -60,4 +60,23 @@ public class EmailServiceImpl implements EmailService {
              System.err.println("ERROR enviando recordatorio: " + e.getMessage());
         }
     }
+
+    @Override
+    @Async
+    public void sendPasswordResetEmail(String recipient, String userName, String resetToken) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(recipient);
+            message.setSubject("Restablecer contraseña - TuTurno");
+            message.setText("Hola " + userName + ",\n\n" +
+                    "Recibimos una solicitud para restablecer la contraseña de tu cuenta.\n\n" +
+                    "Usa el siguiente token en la app para completar el proceso:\n\n" +
+                    resetToken + "\n\n" +
+                    "Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este mensaje.\n\n" +
+                    "Equipo TuTurno");
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("ERROR enviando email de reset: " + e.getMessage());
+        }
+    }
 }

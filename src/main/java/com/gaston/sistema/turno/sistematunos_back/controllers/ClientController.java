@@ -3,9 +3,12 @@ package com.gaston.sistema.turno.sistematunos_back.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.ChangePasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.ClientDTO;
 import com.gaston.sistema.turno.sistematunos_back.security.UserPrincipal;
 import com.gaston.sistema.turno.sistematunos_back.services.ClientService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +46,14 @@ public class ClientController {
     public ResponseEntity<Void> deleteClientProfile(@AuthenticationPrincipal UserPrincipal user) {
         Long clientId = user.getId();
         clientService.deleteClient(clientId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PutMapping("/profile/password")
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal UserPrincipal user,
+                                               @Valid @RequestBody ChangePasswordRequest request) {
+        Long clientId = user.getId();
+        clientService.changePassword(clientId, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

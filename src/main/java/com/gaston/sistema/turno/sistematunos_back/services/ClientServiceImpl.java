@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gaston.sistema.turno.sistematunos_back.dto.ChangePasswordRequest;
 import com.gaston.sistema.turno.sistematunos_back.dto.ClientDTO;
 import com.gaston.sistema.turno.sistematunos_back.dto.AppointmentClientDTO;
 import com.gaston.sistema.turno.sistematunos_back.entities.Client;
@@ -25,11 +27,14 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final ReviewRepository reviewRepository;
     private final AppointmentRepository appointmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public ClientServiceImpl(ClientRepository clientRepository, ReviewRepository reviewRepository, AppointmentRepository appointmentRepository) {
+    public ClientServiceImpl(ClientRepository clientRepository, ReviewRepository reviewRepository,
+            AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder) {
         this.clientRepository = clientRepository;
         this.reviewRepository = reviewRepository;
         this.appointmentRepository = appointmentRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -85,6 +90,20 @@ public class ClientServiceImpl implements ClientService {
              throw new IllegalArgumentException("Cliente no encontrado");
         }
         clientRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long clientId, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("New password and confirmation do not match");
+        }
+        Client client = getById(clientId);
+        if (!passwordEncoder.matches(request.getCurrentPassword(), client.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        client.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        clientRepository.save(client);
     }
 
     ////////// APPOINTMENTS //////////

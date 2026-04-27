@@ -56,4 +56,13 @@ public class RefreshTokenService {
         }
         return token;
     }
+
+    /**
+     * Deletes a RefreshToken from the database.
+     * Used during logout to prevent reuse of a captured token.
+     */
+    @Transactional
+    public void deleteByToken(RefreshToken token) {
+        refreshTokenRepository.delete(token);
+    }
 }
