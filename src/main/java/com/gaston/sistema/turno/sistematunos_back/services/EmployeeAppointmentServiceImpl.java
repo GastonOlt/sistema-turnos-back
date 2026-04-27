@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.AppointmentReposi
 @Service
 public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(EmployeeAppointmentServiceImpl.class);
     private final EmployeeService employeeService;
     private final AppointmentRepository appointmentRepository;
     private final EmailService emailService;
@@ -57,7 +60,8 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
     @Override
     @Transactional
     public void cancelAppointment(Long employeeId, Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
+        // Load with all relations to send cancellation email without extra queries
+        Appointment appointment = appointmentRepository.findByIdWithRelations(appointmentId)
             .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
 
         if (!appointment.getEmployee().getId().equals(employeeId)) {
@@ -66,6 +70,19 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
+
+        // Notify the client that the employee cancelled
+        try {
+            emailService.sendCancellationNotification(
+                    appointment.getClient().getEmail(),
+                    appointment.getClient().getName(),
+                    appointment.getStartDateTime(),
+                    appointment.getService().getName(),
+                    appointment.getShop().getName(),
+                    "el empleado " + appointment.getEmployee().getName());
+        } catch (Exception e) {
+            log.error("Error sending cancellation notification for appointment id={}", appointmentId, e);
+        }
     }
 
     @Override
@@ -92,7 +109,7 @@ public class EmployeeAppointmentServiceImpl implements EmployeeAppointmentServic
                 );
             }
         } catch (Exception e) {
-            System.err.println("Could not send confirmation email: " + e.getMessage());
+            log.error("Error sending confirmation email for appointment id={}", appointmentId, e);
         }
     }
 

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceImpl implements EmailService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EmailServiceImpl.class);
     private final JavaMailSender mailSender;
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -35,7 +36,7 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
         } catch (Exception e) {
-            System.err.println("ERROR enviando email a: " + recipient + " - " + e.getMessage());
+            log.error("Error sending confirmation email to: {}", recipient, e);
         }
     }
 
@@ -57,7 +58,7 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
         } catch (Exception e) {
-             System.err.println("ERROR enviando recordatorio: " + e.getMessage());
+             log.error("Error sending reminder email to: {}", recipient, e);
         }
     }
 
@@ -76,7 +77,30 @@ public class EmailServiceImpl implements EmailService {
                     "Equipo TuTurno");
             mailSender.send(message);
         } catch (Exception e) {
-            System.err.println("ERROR enviando email de reset: " + e.getMessage());
+            log.error("Error sending password reset email to: {}", recipient, e);
+        }
+    }
+
+    @Override
+    @Async
+    public void sendCancellationNotification(String recipient, String recipientName, LocalDateTime dateTime,
+                                             String service, String shopName, String cancelledBy) {
+        if (recipient == null || recipient.toLowerCase().contains("anonimo")) return;
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(recipient);
+            message.setSubject("Turno Cancelado - TuTurno");
+            message.setText("Hola " + recipientName + ",\n\n" +
+                    "Te informamos que el turno para el servicio de: " + service + " ha sido CANCELADO.\n\n" +
+                    "Local: " + shopName + "\n" +
+                    "Fecha y hora: " + dateTime.format(formatter) + "\n" +
+                    "Cancelado por: " + cancelledBy + "\n\n" +
+                    "Podés reservar un nuevo turno cuando lo desees.\n\n" +
+                    "Equipo TuTurno");
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Error sending cancellation email to: {}", recipient, e);
         }
     }
 }

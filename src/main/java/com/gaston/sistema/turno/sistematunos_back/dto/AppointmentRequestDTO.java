@@ -3,15 +3,25 @@ package com.gaston.sistema.turno.sistematunos_back.dto;
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 
 public class AppointmentRequestDTO {
 
+    @NotNull(message = "Employee ID is required")
     @Schema(description = "ID of the employee who will perform the service", example = "1")
     private Long employeeId;
+
+    @NotNull(message = "Service ID is required")
     @Schema(description = "ID of the service to book", example = "5")
     private Long serviceId;
+
+    @NotNull(message = "Shop ID is required")
     @Schema(description = "ID of the shop", example = "2")
     private Long shopId;
+
+    @NotNull(message = "Start date/time is required")
+    @Future(message = "Appointment must be scheduled in the future")
     @Schema(description = "Appointment start date and time in ISO 8601 format", example = "2024-07-15T14:30:00")
     private LocalDateTime startDateTime;
 

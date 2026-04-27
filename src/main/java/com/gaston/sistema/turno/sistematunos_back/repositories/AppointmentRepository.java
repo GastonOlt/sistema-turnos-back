@@ -17,6 +17,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
        boolean existsByClientIdAndStatus(Long clientId, AppointmentStatus status);
        boolean existsByClientIdAndStatusIn(Long clientId, List<AppointmentStatus> status);
 
+       /** Checks if a client already has an active appointment in a SPECIFIC shop — prevents multiple bookings per shop. */
+       boolean existsByClientIdAndShopIdAndStatusIn(Long clientId, Long shopId, List<AppointmentStatus> status);
+
        List<Appointment> findAllByStatusAndEndDateTimeBefore(AppointmentStatus status, LocalDateTime date);
 
        // ─── Availability check ───────────────────────────────────────────────────
@@ -88,4 +91,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               @Param("status") AppointmentStatus status,
               @Param("start") LocalDateTime start,
               @Param("end") LocalDateTime end);
+        // ─── Cancel with full relations loaded (avoids N+1 when sending emails) ─────
+        @Query("SELECT a FROM Appointment a " +
+               "JOIN FETCH a.client " +
+               "JOIN FETCH a.employee " +
+               "JOIN FETCH a.service " +
+               "JOIN FETCH a.shop " +
+               "WHERE a.id = :appointmentId")
+        java.util.Optional<Appointment> findByIdWithRelations(@Param("appointmentId") Long appointmentId);
 }

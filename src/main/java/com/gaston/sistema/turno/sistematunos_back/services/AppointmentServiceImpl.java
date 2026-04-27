@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.AppointmentReposi
 @Service
 public class AppointmentServiceImpl implements AppointmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(AppointmentServiceImpl.class);
     private final AppointmentRepository appointmentRepository;
     private final EmployeeService employeeService;
     private final ShopOfferingService shopOfferingService;
@@ -53,13 +56,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponseDTO bookAppointment(Long clientId, AppointmentRequestDTO request) {
         List<AppointmentStatus> statuses = Arrays.asList(AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING);
 
-        if (appointmentRepository.existsByClientIdAndStatusIn(clientId, statuses)) {
-            throw new RuntimeException("Ya tienes un turno . No puedes reservar más de uno.");
+        // Rule: 1 active appointment per client PER SHOP (not global — clients can use multiple shops)
+        Long shopId = request.getShopId();
+        if (appointmentRepository.existsByClientIdAndShopIdAndStatusIn(clientId, shopId, statuses)) {
+            throw new RuntimeException("Ya tienes un turno activo en este local. No puedes reservar más de uno.");
         }
         Employee employeeDb = employeeService.getEmployeeEntity(request.getEmployeeId());
         ShopOffering serviceDb = shopOfferingService.getServiceEntity(request.getServiceId());
 
-        Long shopId = request.getShopId();
         if (!employeeDb.getShop().getId().equals(shopId)) {
             throw new RuntimeException("El empleado no pertenece a este local");
         }
@@ -167,7 +171,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                                         appointment.getShop().getAddress());
                     }
                 } catch (Exception e) {
-                    System.err.println("Error enviando recordatorio al turno " + appointment.getId());
+                    log.error("Error sending reminder for appointment id={}", appointment.getId(), e);
                 }
             }
     }

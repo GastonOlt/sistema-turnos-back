@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +26,22 @@ import com.gaston.sistema.turno.sistematunos_back.repositories.AppointmentReposi
 @Service
 public class ClientServiceImpl implements ClientService {
 
+    private static final Logger log = LoggerFactory.getLogger(ClientServiceImpl.class);
+
     private final ClientRepository clientRepository;
     private final ReviewRepository reviewRepository;
     private final AppointmentRepository appointmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public ClientServiceImpl(ClientRepository clientRepository, ReviewRepository reviewRepository,
-            AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder) {
+            AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder,
+            EmailService emailService) {
         this.clientRepository = clientRepository;
         this.reviewRepository = reviewRepository;
         this.appointmentRepository = appointmentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Override
@@ -137,15 +144,40 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public void cancelAppointment(Long clientId, Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
+        // Load appointment with all relations in a single query (avoids N+1 when sending emails)
+        Appointment appointment = appointmentRepository.findByIdWithRelations(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado"));
 
         if (!appointment.getClient().getId().equals(clientId)) {
             throw new IllegalArgumentException("Este turno no pertenece al cliente");
         }
 
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED ||
+                appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalArgumentException("Este turno no puede cancelarse en su estado actual");
+        }
+
+        // Cancellation window: must be at least 2 hours before the appointment
+        if (appointment.getStartDateTime().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new IllegalArgumentException(
+                    "No se puede cancelar un turno con menos de 2 horas de anticipación");
+        }
+
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
+
+        // Notify the employee that the client cancelled
+        try {
+            emailService.sendCancellationNotification(
+                    appointment.getEmployee().getEmail(),
+                    appointment.getEmployee().getName(),
+                    appointment.getStartDateTime(),
+                    appointment.getService().getName(),
+                    appointment.getShop().getName(),
+                    "el cliente " + appointment.getClient().getName());
+        } catch (Exception e) {
+            log.error("Error sending cancellation notification for appointment id={}", appointmentId, e);
+        }
     }
 
     private ClientDTO convertToClientDTO(Client client) {

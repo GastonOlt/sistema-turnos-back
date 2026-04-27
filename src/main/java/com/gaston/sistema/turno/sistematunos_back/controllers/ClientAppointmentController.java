@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/client/appointments")
 @Tag(name = "Appointments - Client", description = "Booking and query operations for clients")
@@ -44,7 +46,7 @@ public class ClientAppointmentController {
 
     @Operation(summary = "Book an appointment", description = "Registers an appointment if the slot is available. Requires CLIENT role.")
     @PostMapping
-    public ResponseEntity<AppointmentResponseDTO> bookAppointment(@RequestBody AppointmentRequestDTO request, @AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<AppointmentResponseDTO> bookAppointment(@Valid @RequestBody AppointmentRequestDTO request, @AuthenticationPrincipal UserPrincipal user) {
        Long clientId = user.getId();
        AppointmentResponseDTO appointment = appointmentService.bookAppointment(clientId, request);
        return ResponseEntity.status(HttpStatus.CREATED).body(appointment);
